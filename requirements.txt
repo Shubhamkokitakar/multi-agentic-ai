@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+langchain
+langgraph
+openai
+beautifulsoup4
+requests
+langchain
+sentence-transformers
+chromadb
+unstructured
+lxml
+html5lib
