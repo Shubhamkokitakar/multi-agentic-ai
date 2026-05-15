@@ -11,3 +11,11 @@ chromadb
 unstructured
 lxml
 html5lib
+langchain-text-splitters
+sqlalchemy
+psycopg2-binary
+python-dotenv
+langchain_text_splitters
+yt-dlp 
+openai-whisper 
+ffmpeg-python

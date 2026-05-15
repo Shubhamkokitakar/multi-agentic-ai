@@ -1,37 +1,44 @@
-from langchain_ollama import OllamaEmbeddings
+# embedder.py
 
-from sqlalchemy import text
+import os
 
-from db import engine
+from openai import OpenAI
 
 
-class EmbeddingNode:
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
-    def __init__(self):
 
-        self.embedding_model = OllamaEmbeddings(
-            model="nomic-embed-text"
+class Embedder:
+
+
+    def __init__(
+
+        self,
+        model="text-embedding-3-small"
+
+    ):
+
+        self.model = model
+
+
+    def embed_batch(self, texts: list[str]):
+
+
+        response = client.embeddings.create(
+
+            model=self.model,
+
+            input=texts
+
         )
 
 
-    def run(self, state):
+        return [
 
-        chunks = state["policy_chunks"]
+            item.embedding
 
-        with engine.begin() as conn:
+            for item in response.data
 
-            for chunk in chunks:
-
-                embedding = self.embedding_model.embed_query(
-                    chunk["text"]
-                )
-
-                conn.execute(
-                    text(
-                        """
-                        INSERT INTO youtube_policy_embeddings
-                        (
-                            policy_name,
-                            chunk_text,
-                            embedding
-        return state
+        ]

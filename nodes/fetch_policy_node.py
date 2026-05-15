@@ -3,7 +3,19 @@ import requests
 from bs4 import BeautifulSoup
 from unstructured.partition.html import partition_html
 
-from policy_registration import POLICY_REGISTRY
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+
+POLICY_REGISTRY = {
+    "advertiser_friendly":
+        "https://support.google.com/youtube/answer/6162278",
+
+    "misrepresentation":
+        "https://support.google.com/adspolicy/answer/6020955",
+
+    "healthcare":
+        "https://support.google.com/adspolicy/answer/176031"
+}
 
 
 class PolicyFetchNode:
@@ -29,11 +41,7 @@ class PolicyFetchNode:
 
         soup = BeautifulSoup(html, "html.parser")
 
-        for tag in soup([
-            "script",
-            "style",
-            "noscript"
-        ]):
+        for tag in soup(["script", "style", "noscript"]):
             tag.decompose()
 
         return soup.prettify()
@@ -41,37 +49,69 @@ class PolicyFetchNode:
 
     def parse_html(self, html: str):
 
-        with open(
-            "temp_policy.html",
-            "w",
-            encoding="utf-8"
-        ) as f:
+        with open("temp_policy.html", "w", encoding="utf-8") as f:
             f.write(html)
 
-        elements = partition_html(
-            filename="temp_policy.html"
+        elements = partition_html(filename="temp_policy.html")
+
+        junk_words = [
+            "Privacy Policy",
+            "Terms of Service",
+            "Help Center",
+            "Sign in",
+            "Submit feedback",
+            "Skip to main content"
+        ]
+
+        all_text = []
+
+        for el in elements:
+
+            if not hasattr(el, "text"):
+                continue
+
+            text = el.text.strip()
+
+            if len(text) < 40:
+                continue
+
+            if any(j in text for j in junk_words):
+                continue
+
+            all_text.append(text)
+
+        combined_text = "\n\n".join(all_text)
+
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=500,
+            chunk_overlap=100,
+            separators=["\n\n", "\n", ". ", " ", ""]
         )
 
-        parsed_text = "\n".join(
-            [
-                el.text
-                for el in elements
-                if hasattr(el, "text")
-            ]
-        )
+        chunks = splitter.split_text(combined_text)
 
-        return parsed_text
+        return chunks
 
 
-    def chunk_text(
-        self,
-        text,
-        chunk_size=1000,
-        overlap=150
-    ):
+# =========================
+# RUN ALL POLICIES
+# =========================
+def get_all_chunks():
+    node = PolicyFetchNode()
 
-        chunks = []
+    all_data = []
 
-        start = 0
+    for name, url in POLICY_REGISTRY.items():
 
-        while start < len(text):
+        html = node.fetch_html(url)
+        cleaned = node.clean_html(html)
+        chunks = node.parse_html(cleaned)
+
+        for chunk in chunks:
+            all_data.append({
+                "policy_name": name,
+                "chunk": chunk
+            })
+    print(all_data)
+
+    return all_data

@@ -1,18 +1,17 @@
 from typing import TypedDict
+from langgraph.graph import END, StateGraph
 
 from nodes.fetch_policy_node import PolicyFetchNode
 from nodes.embedding_node import EmbeddingNode
-from nodes.retrieval_agent import PolicyRetrievalAgent
-
+from nodes.retrival_agent import PolicyRetrievalAgent
 
 class GraphState(TypedDict):
-
     policy_chunks: list
 
 
-fetch_node = PolicyFetchNode()
+policy_Fetch_node = PolicyFetchNode()
 embedding_node = EmbeddingNode()
-retrieval_agent = PolicyRetrievalAgent()
+policy_retrieval_agent = PolicyRetrievalAgent()
 
 
 workflow = StateGraph(GraphState)
@@ -20,7 +19,7 @@ workflow = StateGraph(GraphState)
 
 workflow.add_node(
     "fetch_policies",
-    fetch_node.run
+    policy_Fetch_node.run
 )
 
 workflow.add_node(
@@ -56,7 +55,7 @@ if __name__ == "__main__":
 
     query = "guaranteed weight loss claims"
 
-    results = retrieval_agent.retrieve(query)
+    results = policy_retrieval_agent.retrieve(query)
 
 
     print("Retrieved Context:\n")
