@@ -1,68 +1,41 @@
-from typing import TypedDict
-from langgraph.graph import END, StateGraph
+# main.py
 
-from nodes.fetch_policy_node import PolicyFetchNode
-from nodes.embedding_node import EmbeddingNode
-from nodes.retrival_agent import PolicyRetrievalAgent
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
-class GraphState(TypedDict):
-    policy_chunks: list
+app = FastAPI()
 
-
-policy_Fetch_node = PolicyFetchNode()
-embedding_node = EmbeddingNode()
-policy_retrieval_agent = PolicyRetrievalAgent()
-
-
-workflow = StateGraph(GraphState)
-
-
-workflow.add_node(
-    "fetch_policies",
-    policy_Fetch_node.run
+# Allow frontend connection
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-workflow.add_node(
-    "generate_embeddings",
-    embedding_node.run
-)
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    
+    await websocket.accept()
+    print("Client Connected")
 
+    try:
+        while True:
+            
+            # Receive question from UI
+            question = await websocket.receive_text()
 
-workflow.set_entry_point(
-    "fetch_policies"
-)
+            # Print in backend terminal
+            print(f"Question from UI: {question}")
 
-workflow.add_edge(
-    "fetch_policies",
-    "generate_embeddings"
-)
+            # Optional response back to UI
+            await websocket.send_text(f"Received: {question}")
 
-workflow.add_edge(
-    "generate_embeddings",
-    END
-)
-
-
-app = workflow.compile()
+    except WebSocketDisconnect:
+        print("Client Disconnected")
 
 
 if __name__ == "__main__":
-
-    app.invoke({})
-
-    print("\nPolicy ingestion completed\n")
-
-
-    query = "guaranteed weight loss claims"
-
-    results = policy_retrieval_agent.retrieve(query)
-
-
-    print("Retrieved Context:\n")
-
-    for row in results:
-
-        print("Policy:", row[0])
-        print("Text:", row[1][:500])
-        print("Distance:", row[2])
-        print("=" * 80)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

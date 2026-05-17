@@ -5,8 +5,8 @@ import hashlib
 from sqlalchemy import text
 
 from db import SessionLocal
-from embedding_node import Embedder
 from nodes.fetch_policy_node import get_all_chunks
+from nodes.embedding_node import Embedder
 
 
 # ==========================================
@@ -47,33 +47,86 @@ def store_chunks():
 
 
         # ----------------------------------
-        # CREATE EMBEDDINGS IN BATCH
+        # FETCH EXISTING HASHES
+        # ----------------------------------
+
+        existing_rows = db.execute(
+
+            text("""
+
+                SELECT content_hash
+                FROM policy_chunks
+
+            """)
+
+        ).fetchall()
+
+
+        existing_hashes = {
+
+            row[0]
+            for row in existing_rows
+
+        }
+
+        print(f"\nExisting chunks in DB: {len(existing_hashes)}")
+
+
+        # ----------------------------------
+        # REMOVE DUPLICATES
+        # ----------------------------------
+
+        new_data = []
+
+        for item in data:
+
+            content = item["chunk"]
+
+            content_hash = generate_hash(content)
+
+            if content_hash in existing_hashes:
+                continue
+
+            item["content_hash"] = content_hash
+
+            new_data.append(item)
+
+
+        print(f"\nNew unique chunks: {len(new_data)}")
+
+
+        # ----------------------------------
+        # STOP IF NOTHING NEW
+        # ----------------------------------
+
+        if len(new_data) == 0:
+
+            print("\n✅ No new chunks to insert")
+
+            return
+
+
+        # ----------------------------------
+        # CREATE EMBEDDINGS ONLY FOR NEW DATA
         # ----------------------------------
 
         texts = [
+
             item["chunk"]
-            for item in data
+            for item in new_data
+
         ]
 
         embeddings = embedder.embed_batch(texts)
 
-        print("\nEmbeddings generated successfully")
+        print("\n✅ Embeddings generated successfully")
 
 
         # ----------------------------------
         # INSERT INTO DB
         # ----------------------------------
 
-        for index, item in enumerate(data):
-
-            policy_name = item["policy_name"]
-
-            content = item["chunk"]
-
-            embedding = embeddings[index]
-
-            content_hash = generate_hash(content)
-
+        for index, item in enumerate(new_data):
 
             db.execute(
 
@@ -106,13 +159,13 @@ def store_chunks():
 
                 {
 
-                    "policy_name": policy_name,
+                    "policy_name": item["policy_name"],
 
-                    "content": content,
+                    "content": item["chunk"],
 
-                    "content_hash": content_hash,
+                    "content_hash": item["content_hash"],
 
-                    "embedding": embedding,
+                    "embedding": embeddings[index],
 
                     "chunk_index": index
 
@@ -127,7 +180,7 @@ def store_chunks():
 
         db.commit()
 
-        print("\n✅ All chunks stored successfully")
+        print("\n✅ All new chunks stored successfully")
 
 
     except Exception as e:
