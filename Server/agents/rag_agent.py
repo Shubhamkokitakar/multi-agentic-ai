@@ -8,22 +8,39 @@ client = OpenAI(
 
 
 async def rag_agent(question: str):
-    print(question,'question in rag agent')
 
-    context = search_documents(question)
+    print(question, 'question in rag agent')
 
+    # -------------------------
+    # RETRIEVE CONTEXT
+    # -------------------------
+    documents = search_documents(question)
+
+    context = "\n\n".join(documents)
+
+    # -------------------------
+    # GROUNDED PROMPT
+    # -------------------------
     prompt = f"""
+You are a cricket assistant.
 
-    Answer using provided context.
+Answer ONLY using the provided context.
 
-    Context:
-    {context}
+If the answer is not found in the context,
+reply exactly with:
 
-    Question:
-    {question}
+"I could not find the answer in the knowledge base."
 
-    """
+CONTEXT:
+{context}
 
+QUESTION:
+{question}
+"""
+
+    # -------------------------
+    # LLM CALL
+    # -------------------------
     response = client.chat.completions.create(
 
         model="gpt-4.1-mini",
