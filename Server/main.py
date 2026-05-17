@@ -1,41 +1,40 @@
-# main.py
+from fastapi import FastAPI, WebSocket
+from starlette.websockets import WebSocketDisconnect
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+from graph.cricket_graph import graph
 
 app = FastAPI()
 
-# Allow frontend connection
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    
+
     await websocket.accept()
-    print("Client Connected")
+
+    print("CLIENT CONNECTED")
 
     try:
+
         while True:
-            
-            # Receive question from UI
+
             question = await websocket.receive_text()
 
-            # Print in backend terminal
-            print(f"Question from UI: {question}")
+            print("\nQUESTION:", question)
 
-            # Optional response back to UI
-            await websocket.send_text(f"Received: {question}")
+            result = await graph.ainvoke(
+
+                {
+                    "question": question
+                }
+            )
+
+            print(result)
+
+            await websocket.send_text(
+
+                result["response"]
+            )
 
     except WebSocketDisconnect:
-        print("Client Disconnected")
 
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+        print("CLIENT DISCONNECTED")
