@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+langchain
+langgraph
+openai
+langchain-community
+requests
+langchain
+sentence-transformers
+chromadb
+langchain-text-splitters
+sqlalchemy
+psycopg2-binary
+python-dotenv
+langchain_text_splitters
+datasets 
+pandas
