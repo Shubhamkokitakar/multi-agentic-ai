@@ -1,7 +1,8 @@
 from openai import OpenAI
 import os
+from langchain_openai import ChatOpenAI 
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+llm = ChatOpenAI(model="gpt-4.1-mini")
 
 async def followup_agent(question: str, answer: str, retrieved_docs: list[str] = None):
     docs_text = "\n\n".join(retrieved_docs) if retrieved_docs else ""
@@ -13,6 +14,7 @@ Based on the retrieved documents and the answer, suggest 2-3 follow-up questions
 ONLY suggest questions that can be answered from the retrieved documents.
 Do not invent new topics.
 
+
 RETRIEVED DOCUMENTS:
 {docs_text}
 
@@ -22,10 +24,9 @@ ORIGINAL QUESTION:
 ANSWER:
 {answer}
 
-FOLLOW-UP QUESTIONS:
+
+Suggest 2-3 follow-up questions that are directly supported by the retrieved documents.
+If you cannot, respond with: No follow-up questions.
 """
-    response = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.choices[0].message.content.strip()
+    response = await llm.ainvoke(prompt)
+    return response.content.strip()

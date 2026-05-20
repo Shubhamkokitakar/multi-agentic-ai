@@ -34,7 +34,7 @@ async def websocket_endpoint(websocket: WebSocket):
             )
 
             conversation_history.append({"role": "assistant", "content": result.get("response", "")})
-
+            print("RESPONSE:", result)
             await websocket.send_json({
                 "answer": result.get("response", ""),
                 "follow_ups": result.get("follow_ups", "")

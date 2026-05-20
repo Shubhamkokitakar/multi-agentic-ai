@@ -1,10 +1,11 @@
+from click import prompt
+
 from vector_store import search_documents
 from openai import OpenAI
 import os
+from langchain_openai import ChatOpenAI
 
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+llm = ChatOpenAI(model="gpt-4.1-mini")
 
 
 async def rag_agent(question: str):
@@ -15,8 +16,10 @@ async def rag_agent(question: str):
     # RETRIEVE CONTEXT
     # -------------------------
     documents = search_documents(question)
+    print(documents, 'documents retrieved in rag agent')
 
     context = "\n\n".join(documents)
+    print(context, 'context in rag agent')
 
     # -------------------------
     # GROUNDED PROMPT
@@ -41,18 +44,6 @@ QUESTION:
     # -------------------------
     # LLM CALL
     # -------------------------
-    response = client.chat.completions.create(
-
-        model="gpt-4.1-mini",
-
-        messages=[
-
-            {
-                "role": "user",
-                "content": prompt
-            }
-
-        ]
-    )
-
-    return response.choices[0].message.content
+    response = await llm.ainvoke(prompt)
+    print(response.content.strip(), 'response in rag agent')
+    return response.content.strip()

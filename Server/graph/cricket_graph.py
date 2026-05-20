@@ -8,116 +8,15 @@ from agents.follow_up_agent import followup_agent
 from agents.query_refiner import refine_query
 from vector_store import search_documents
 
-class GraphState(TypedDict, total=False):
-
-    question: str
-
-    route: str
-
-    response: str
-
-    follow_ups: str
-    history: list[dict[str, str]]
-    standalone_question: str
-    retrieved_docs: list[str]  # NEW
-
-
-LIVE_KEYWORDS = [
-
-    "live",
-    "score",
-    "today",
-    "current",
-    "latest",
-    "ipl"
-
-]
-
-
-# ----------------------------
-# REWRITE NODE
-# ----------------------------
-async def rewrite_node(state: GraphState):
-    print("REWRITE_NODE: rewriting question using history")
-    standalone_q = await refine_query(
-        state.get("history", []),
-        state["question"]
-    )
-    state["standalone_question"] = standalone_q
-    print(f"REWRITE_NODE: original={state['question']}, rewritten={standalone_q}")
-    return state
-
-
-# ----------------------------
-# ROUTER NODE
-# ----------------------------
-async def router_node(state: GraphState):
-
-    question = state.get("standalone_question", state["question"]).lower()
-
-    is_live = any(
-
-        keyword in question
-
-        for keyword in LIVE_KEYWORDS
-    )
-
-    if is_live:
-
-        state["route"] = "live"
-
-    else:
-
-        state["route"] = "rag"
-
-    return state
-
-
-# ----------------------------
-# LIVE NODE
-# ----------------------------
-async def live_node(state: GraphState):
-
-    result = await live_agent(
-
-        state["question"]
-    )
-
-    state["response"] = result
-
-    return state
-
-
-# ----------------------------
-# RAG NODE
-# ----------------------------
-async def rag_node(state: GraphState):
-
-    search_q = state.get("standalone_question", state["question"])
-      # Get documents
-    documents = search_documents(search_q)
-    state["retrieved_docs"] = documents  # Store them
-
-    result = await rag_agent(search_q)
-
-    state["response"] = result
-
-    return state
+from nodes.live_node import live_node
+from nodes.rag_node import rag_node
+from nodes.rewrite_node import rewrite_node
+from nodes.router_node import router_node
+from nodes.follow_up_node import follow_up_node
+from graph.state import GraphState
 
 
 
-# ...
-
-async def follow_up_node(state: GraphState):
-    print("FOLLOW_UP_NODE: running for question=", state.get("question"))
-    follow_up_text = await followup_agent(
-        state["question"],
-        state["response"],
-        state.get("retrieved_docs")
-    )
-    state["follow_ups"] = follow_up_text or ""
-    print("FOLLOW_UP_NODE: follow_ups=", state["follow_ups"])
-    return state
 
 
 # ----------------------------
@@ -155,10 +54,11 @@ workflow.add_node("follow_up", follow_up_node)
 workflow.set_entry_point("rewrite")
 
 
+# workflow route
+
 def route_decision(state: GraphState):
 
     return state["route"]
-
 
 workflow.add_edge("rewrite", "router")
 

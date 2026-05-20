@@ -1,7 +1,9 @@
 from openai import OpenAI
 import os
+from langchain_openai import ChatOpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+llm = ChatOpenAI(model="gpt-4.1-mini")
+
 
 async def refine_query(history, question):
     history_text = "\n".join(
@@ -22,8 +24,6 @@ Latest question:
 
 Standalone question:
 """
-    response = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.choices[0].message.content.strip()
+    response = await llm.ainvoke(prompt)
+
+    return response.content.strip()

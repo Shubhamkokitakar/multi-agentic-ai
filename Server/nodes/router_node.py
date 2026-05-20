@@ -1,5 +1,6 @@
 from agents.live_agent import live_agent
 from agents.rag_agent import rag_agent
+from graph.state import GraphState
 
 LIVE_KEYWORDS = [
 
@@ -12,10 +13,12 @@ LIVE_KEYWORDS = [
 
 ]
 
-
+# ----------------------------
+# ROUTER NODE
+# ----------------------------
 async def router_node(state: GraphState):
 
-    question = state["question"].lower()
+    question = state.get("standalone_question", state["question"]).lower()
 
     is_live = any(
 
