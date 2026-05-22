@@ -1,0 +1,61 @@
+<div class="chat-container">
+
+  <div class="chat-header">
+    AI Assistant
+  </div>
+
+  <div class="messages">
+
+    <div
+      *ngFor="let msg of messages"
+      class="message-wrapper"
+      [ngClass]="msg.role"
+    >
+
+      <div class="message-bubble">
+
+        <div class="message-content">
+          {{ msg.content }}
+        </div>
+
+        <div
+          class="followups"
+          *ngIf="msg.followUps?.length"
+        >
+
+          <button
+            *ngFor="let follow of msg.followUps"
+            class="followup-btn"
+            (click)="askFollowUp(follow)"
+          >
+            {{ follow }}
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div *ngIf="loading" class="typing">
+      Thinking...
+    </div>
+
+  </div>
+
+  <div class="input-container">
+
+    <input
+      type="text"
+      [(ngModel)]="question"
+      (keyup.enter)="sendMessage()"
+      placeholder="Ask anything..."
+    />
+
+    <button (click)="sendMessage()">
+      Send
+    </button>
+
+  </div>
+
+</div>

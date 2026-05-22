@@ -1,6 +1,7 @@
-// socket.service.ts (Angular)
+// socket.service.ts
 
 import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +9,8 @@ import { Injectable } from '@angular/core';
 export class SocketService {
 
   private socket!: WebSocket;
+
+  public messages$ = new Subject<any>();
 
   connect() {
 
@@ -18,7 +21,10 @@ export class SocketService {
     };
 
     this.socket.onmessage = (event) => {
-      console.log('Message from backend:', event.data);
+
+      const data = JSON.parse(event.data);
+
+      this.messages$.next(data);
     };
 
     this.socket.onerror = (error) => {
@@ -33,8 +39,11 @@ export class SocketService {
   sendQuestion(question: string) {
 
     if (this.socket.readyState === WebSocket.OPEN) {
+
       this.socket.send(question);
+
     } else {
+
       console.log('Socket not connected');
     }
   }
