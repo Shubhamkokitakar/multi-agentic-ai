@@ -1,6 +1,6 @@
 # Cricket RAG Chatbot
 
-Description of your project here...
+A chatbot that answers cricket-related questions and provides live match data and updates.
 
 ## System Architecture
 
