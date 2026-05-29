@@ -1,7 +1,10 @@
 from fastapi import FastAPI, WebSocket
+from dotenv import load_dotenv
 from starlette.websockets import WebSocketDisconnect
 
 from graph.cricket_graph import graph
+from langchain_openai import ChatOpenAI
+load_dotenv()
 
 app = FastAPI()
 

@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+from agents.generic_agent import generic_agent
 from langgraph.graph import StateGraph, END
 
 from agents.live_agent import live_agent
@@ -49,6 +50,8 @@ workflow.add_node(
 )
 workflow.add_node("follow_up", follow_up_node)
 
+workflow.add_node(generic_agent, generic_agent)
+
 
 
 workflow.set_entry_point("rewrite")
@@ -69,6 +72,7 @@ workflow.add_conditional_edges(
     route_decision,
 
     {
+        "generic": "generic_agent",
 
         "live": "live",
 

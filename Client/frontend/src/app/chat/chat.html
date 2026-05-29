@@ -37,7 +37,7 @@
 
     </div>
 
-    <div *ngIf="loading" class="typing">
+    <div [hidden]="!loading"  class="typing">
       Thinking...
     </div>
 

@@ -12,7 +12,16 @@ LIVE_KEYWORDS = [
     "ipl"
 
 ]
-
+GENERIC_KEYWORDS = [
+    "hi",
+    "hello",
+    "hey",
+    "thanks",
+    "thank you",
+    "good morning",
+    "good evening",
+    "how are you"
+]
 # ----------------------------
 # ROUTER NODE
 # ----------------------------
@@ -20,17 +29,17 @@ async def router_node(state: GraphState):
 
     question = state.get("standalone_question", state["question"]).lower()
 
-    is_live = any(
+     # GENERIC ROUTE
+    if question in GENERIC_KEYWORDS:
 
-        keyword in question
+        state["route"] = "generic"
 
-        for keyword in LIVE_KEYWORDS
-    )
-
-    if is_live:
+    # LIVE ROUTE
+    elif any(keyword in question for keyword in LIVE_KEYWORDS):
 
         state["route"] = "live"
 
+    # DEFAULT RAG ROUTE
     else:
 
         state["route"] = "rag"
