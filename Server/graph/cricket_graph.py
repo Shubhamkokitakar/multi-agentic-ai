@@ -7,7 +7,7 @@ from agents.live_agent import live_agent
 from agents.rag_agent import rag_agent
 from agents.follow_up_agent import followup_agent
 from agents.query_refiner import refine_query
-from vector_store import search_documents
+from database.vector_store import search_documents
 
 from nodes.live_node import live_node
 from nodes.rag_node import rag_node

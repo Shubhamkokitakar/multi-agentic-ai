@@ -1,5 +1,5 @@
 from agents.rag_agent import rag_agent
-from vector_store import search_documents
+from database.vector_store import search_documents
 from graph.state import GraphState
 
 # ----------------------------

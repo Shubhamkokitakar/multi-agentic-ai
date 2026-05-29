@@ -1,8 +1,8 @@
 from datasets import load_dataset
 
-from embedder import Embedder
+from nodes.embedding_node import Embedder
 
-from vector_store import collection
+from database.vector_store import collection
 
 
 embedder = Embedder()

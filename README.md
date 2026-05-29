@@ -61,6 +61,3 @@ graph TD
 * ChromaDB
 * WebSockets
 * CricAPI
-
-```
-```

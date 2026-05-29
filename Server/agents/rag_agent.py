@@ -1,6 +1,6 @@
 from click import prompt
 
-from vector_store import search_documents
+from database.vector_store import search_documents
 from openai import OpenAI
 import os
 from langchain_openai import ChatOpenAI

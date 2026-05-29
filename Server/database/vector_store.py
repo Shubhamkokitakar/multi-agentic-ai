@@ -1,5 +1,5 @@
 import chromadb
-from embedder import Embedder
+from nodes.embedding_node import Embedder
 
 client = chromadb.PersistentClient(path="./vector_db")
 

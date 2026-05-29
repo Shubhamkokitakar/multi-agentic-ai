@@ -1,44 +1,50 @@
-# embedder.py
-
 import os
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
+# -------------------------
+# LOAD ENV VARIABLES
+# -------------------------
+load_dotenv()
 
+# -------------------------
+# OPENAI CLIENT
+# -------------------------
 client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
+
+    api_key=os.getenv(
+        "OPENAI_API_KEY"
+    )
 )
 
 
 class Embedder:
 
-
     def __init__(
 
         self,
         model="text-embedding-3-small"
-
     ):
 
         self.model = model
 
+    def embed_batch(
 
-    def embed_batch(self, texts: list[str]):
-
+        self,
+        texts: list[str]
+    ):
 
         response = client.embeddings.create(
 
             model=self.model,
 
             input=texts
-
         )
-
 
         return [
 
             item.embedding
 
             for item in response.data
-
         ]
