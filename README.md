@@ -5,35 +5,62 @@ A chatbot that answers cricket-related questions and provides live match data an
 ## System Architecture
 
 ```mermaid
-graph LR
-    A["WebSocket Client"] <-->|JSON| B["FastAPI Server<br/>main.py"]
-    
-    B -->|graph.ainvoke| C["LangGraph<br/>cricket_graph.py"]
-    
-    C --> D["Graph Nodes"]
-    D --> D1["Rewrite Node<br/>query_refiner.py"]
-    D --> D2["Router Node"]
-    D --> D3["RAG Node"]
-    D --> D4["Live Node"]
-    D --> D5["Follow-up Node"]
-    
-    D3 --> E1["Vector Store<br/>Chroma DB"]
-    D4 --> E2["Cricket API<br/>cricapi.com"]
-    D5 --> E3["OpenAI LLM<br/>gpt-4.1-mini"]
-    D1 --> E3
-    D3 --> E3
-    D4 --> E3
-    
-    B --> F["Session State"]
-    F --> F1["conversation_history"]
-    
-    style B fill:#bbdefb
-    style C fill:#c8e6c9
-    style D1 fill:#e1f5ff
+graph TD
+
+    A["WebSocket Client"] <-->|JSON| B["FastAPI Server"]
+
+    B --> C["LangGraph Workflow"]
+
+    C --> D1["Rewrite Agent"]
+    D1 --> D2["Router Agent"]
+
+    D2 -->|General Cricket Query| E1["Generic Agent"]
+    D2 -->|Historical / Knowledge Query| E2["RAG Agent"]
+    D2 -->|Live Match Query| E3["Live Agent"]
+
+    E1 --> F["Follow-up Agent"]
+    E2 --> F
+    E3 --> F
+
+    E2 --> G1["Chroma Vector DB"]
+    E3 --> G2["CricAPI"]
+
+    E1 --> H["OpenAI GPT-4.1-mini"]
+    E2 --> H
+    E3 --> H
+    F --> H
+
+    B --> I["Session Memory"]
+    I --> I1["Conversation History"]
+
+    style D1 fill:#e1f5fe
     style D2 fill:#fff3e0
-    style D3 fill:#e8f5e9
-    style D4 fill:#f3e5f5
-    style D5 fill:#fce4ec
-    style E1 fill:#ffccbc
-    style E2 fill:#ffccbc
-    style E3 fill:#ffccbc
+    style E1 fill:#f3e5f5
+    style E2 fill:#e8f5e9
+    style E3 fill:#fce4ec
+    style F fill:#ede7f6
+```
+
+## Features
+
+* Real-time cricket match updates
+* Cricket knowledge Q&A
+* RAG-based retrieval using vector database
+* Live cricket API integration
+* Conversational memory support
+* Multi-agent workflow using LangGraph
+* WebSocket-based streaming responses
+
+## Tech Stack
+
+* FastAPI
+* LangGraph
+* LangChain
+* LangSmith
+* OpenAI GPT-4.1-mini
+* ChromaDB
+* WebSockets
+* CricAPI
+
+```
+```
