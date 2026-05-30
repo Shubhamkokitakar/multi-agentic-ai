@@ -1,17 +1,14 @@
-FROM node:22
+FROM node:20
 
 WORKDIR /app
 
-COPY package*.json ./
+RUN npm install -g @angular/cli
 
+COPY package*.json ./
 RUN npm install
 
 COPY . .
 
-RUN npm run build
-
-RUN npm install -g http-server
-
 EXPOSE 4200
 
-CMD ["http-server", "dist/browser", "-p", "80"]
+CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
