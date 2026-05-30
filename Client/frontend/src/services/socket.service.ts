@@ -13,7 +13,8 @@ export class SocketService {
   public messages$ = new Subject<any>();
 
   connect() {
-
+    console.log('inside socket loop');
+    
     this.socket = new WebSocket('ws://localhost:8000/ws');
 
     this.socket.onopen = () => {

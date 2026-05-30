@@ -6,23 +6,22 @@
 
   <div class="messages">
 
+    <div *ngIf="messages.length === 0" class="welcome-message">
+      Ask me anything related to cricket 🏏
+    </div>
+
     <div
       *ngFor="let msg of messages"
       class="message-wrapper"
       [ngClass]="msg.role"
     >
-
       <div class="message-bubble">
 
         <div class="message-content">
           {{ msg.content }}
         </div>
 
-        <div
-          class="followups"
-          *ngIf="msg.followUps?.length"
-        >
-
+        <div class="followups" *ngIf="msg.followUps?.length">
           <button
             *ngFor="let follow of msg.followUps"
             class="followup-btn"
@@ -30,14 +29,12 @@
           >
             {{ follow }}
           </button>
-
         </div>
 
       </div>
-
     </div>
 
-    <div [hidden]="!loading"  class="typing">
+    <div *ngIf="loading" class="typing">
       Thinking...
     </div>
 

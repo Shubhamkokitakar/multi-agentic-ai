@@ -5,7 +5,9 @@ async def live_node(state: GraphState):
 
     result = await live_agent(
 
-        state["question"]
+        state["question"],
+        conversation_history=state.get("history", "")
+
     )
 
     state["response"] = result
