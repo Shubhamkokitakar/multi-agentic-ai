@@ -1,0 +1,64 @@
+<div class="auth-wrapper">
+
+  <div class="auth-card">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button (click)="switchMode('login')" [class.active]="mode === 'login'">
+        Login
+      </button>
+      <button (click)="switchMode('signup')" [class.active]="mode === 'signup'">
+        Sign Up
+      </button>
+    </div>
+
+    <h1 *ngIf="mode === 'login'">Welcome back</h1>
+    <h1 *ngIf="mode === 'signup'">Create account</h1>
+
+    <p class="subtitle">
+      {{ mode === 'login' ? 'Login to continue' : 'Join us today' }}
+    </p>
+
+    <!-- ERROR -->
+    <div class="error" *ngIf="errorMsg">
+      {{ errorMsg }}
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()">
+
+      <input type="email" formControlName="email" placeholder="Email" />
+      <small *ngIf="lf.email.touched && lf.email.invalid">Invalid email</small>
+
+      <input type="password" formControlName="password" placeholder="Password" />
+      <small *ngIf="lf.password.touched && lf.password.invalid">
+        Min 6 characters
+      </small>
+
+      <button type="submit" [disabled]="loginForm.invalid || loading">
+        {{ loading ? 'Logging in...' : 'Login' }}
+      </button>
+
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form *ngIf="mode === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()">
+
+      <input type="email" formControlName="email" placeholder="Email" />
+
+      <input type="password" formControlName="password" placeholder="Password" />
+
+      <input type="password" formControlName="confirmPassword" placeholder="Confirm Password" />
+
+      <small *ngIf="sf.password.touched && sf.confirmPassword.touched && sf.password.value !== sf.confirmPassword.value">
+        Passwords must match
+      </small>
+
+      <button type="submit" [disabled]="signupForm.invalid || loading">
+        {{ loading ? 'Creating account...' : 'Sign Up' }}
+      </button>
+
+    </form>
+
+  </div>
+</div>
