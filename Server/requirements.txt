@@ -5,11 +5,8 @@ langgraph
 openai
 langchain-community
 requests
-langchain
 langchain_openai
-sentence-transformers
 chromadb
-langchain-text-splitters
 sqlalchemy
 psycopg2-binary
 python-dotenv
