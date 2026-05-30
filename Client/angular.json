@@ -60,7 +60,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "allowedHosts": ["multi-agentic-ai-1.onrender.com",".onrender.com", "localhost" ],
+              "options": {
+            "allowedHosts": ["multi-agentic-ai-1.onrender.com"]
+           },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"
