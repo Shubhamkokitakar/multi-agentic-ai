@@ -13,7 +13,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:4200",
-        "https://multi-agentic-ai-1.onrender.com"
+        "https://multi-agentic-ai-1.onrender.com",
+        "https://multi-agentic-ai.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
