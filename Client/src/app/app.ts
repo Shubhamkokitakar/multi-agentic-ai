@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
+  standalone: true,
   selector: 'app-root',
   imports: [FormsModule, RouterOutlet],
   templateUrl: './app.html',

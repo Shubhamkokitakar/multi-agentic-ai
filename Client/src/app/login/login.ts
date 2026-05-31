@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { Spinner } from '../shared/spinner/spinner';
 
 @Component({
+  standalone: true,
   selector: 'app-login',
   imports: [FormsModule,CommonModule,ReactiveFormsModule,Spinner],
   templateUrl: './login.html',
