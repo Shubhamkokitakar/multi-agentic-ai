@@ -7,11 +7,6 @@ from nodes.follow_up_node import follow_up_node
 from graph.state import GraphState
 from agents.generic_agent import generic_agent
 
-
-
-
-
-
 # ----------------------------
 # BUILD GRAPH
 # ----------------------------
@@ -42,38 +37,39 @@ workflow.add_node(
 )
 workflow.add_node("follow_up", follow_up_node)
 
-workflow.add_node(generic_agent, generic_agent)
-
-
-
-workflow.set_entry_point("rewrite")
-
-
-# workflow route
+workflow.add_node("generic_agent", generic_agent)
 
 def route_decision(state: GraphState):
 
     return state["route"]
 
-workflow.add_edge("rewrite", "router")
+# workflow route
+workflow.set_entry_point("router")
 
 workflow.add_conditional_edges(
-
     "router",
-
     route_decision,
-
     {
         "generic": "generic_agent",
+        "live": "rewrite",
+        "rag": "rewrite"
+    }
+)
 
+workflow.add_conditional_edges(
+    "rewrite",
+    route_decision,
+    {
         "live": "live",
-
         "rag": "rag"
     }
 )
 
+workflow.add_edge("generic_agent", END)
+
 workflow.add_edge("live", "follow_up")
 workflow.add_edge("rag", "follow_up")
+
 workflow.add_edge("follow_up", END)
 
 graph = workflow.compile()

@@ -1,49 +1,26 @@
-from fastapi import FastAPI, WebSocket
-from dotenv import load_dotenv
-from starlette.websockets import WebSocketDisconnect
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from database.db import engine
+from authentication.models import Base
+from database.db import engine
 
-from graph.cricket_graph import graph
-from langchain_openai import ChatOpenAI
-load_dotenv()
+from authentication.auth import router as auth_router
+from socket_routes.chatsocket import router as websocket_router
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4200",
+        "https://multi-agentic-ai-1.onrender.com"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+Base.metadata.create_all(bind=engine)
 
-    await websocket.accept()
-    conversation_history = []
-
-
-    print("CLIENT CONNECTED")
-
-    try:
-
-        while True:
-
-            question = await websocket.receive_text()
-            conversation_history.append({"role": "user", "content": question})
-
-            print("\nQUESTION:", question)
-
-            result = await graph.ainvoke(
-
-                {
-                    "question": question,
-                    "history": conversation_history
-
-                }
-            )
-
-            conversation_history.append({"role": "assistant", "content": result.get("response", "")})
-            print("RESPONSE:", result)
-            await websocket.send_json({
-                "answer": result.get("response", ""),
-                "follow_ups": result.get("follow_ups", "")
-            })
-            print(result)
-
-    except WebSocketDisconnect:
-
-        print("CLIENT DISCONNECTED")
+app.include_router(auth_router)
+app.include_router(websocket_router)

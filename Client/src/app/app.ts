@@ -1,11 +1,11 @@
-import { Component, signal } from '@angular/core';
-import { SocketService } from '../services/socket.service';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Chat} from './chat/chat';
-import { Login } from "./login/login";
+import { RouterOutlet } from '@angular/router';
+
 @Component({
+  standalone: true,
   selector: 'app-root',
-  imports: [FormsModule, Chat, Login],
+  imports: [FormsModule, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

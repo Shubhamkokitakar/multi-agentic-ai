@@ -1,10 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AuthService } from '../services/auth-service';
+import { Router } from '@angular/router';
+import { Spinner } from '../shared/spinner/spinner';
 
 @Component({
+  standalone: true,
   selector: 'app-login',
-  imports: [FormsModule,CommonModule,ReactiveFormsModule],
+  imports: [FormsModule,CommonModule,ReactiveFormsModule,Spinner],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -13,8 +17,9 @@ export class Login {
 
   loading = false;
   errorMsg = '';
+  successMsg = '';
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private authService:AuthService,  private router: Router) {}
 
   loginForm: any;
   signupForm: any;
@@ -27,8 +32,7 @@ export class Login {
 
     this.signupForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -38,32 +42,69 @@ export class Login {
   }
 
   onLogin() {
+    this.loginForm.markAllAsTouched();
+
     if (this.loginForm.invalid) return;
 
     this.loading = true;
+    this.errorMsg = '';
+    this.successMsg = '';
 
-    setTimeout(() => {
-      this.loading = false;
-      console.log('LOGIN:', this.loginForm.value);
-    }, 1200);
+    const payload = {
+      email: this.loginForm.value.email,
+      password: this.loginForm.value.password
+    };
+
+    this.authService.login(payload).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.successMsg = 'Login successful! Redirecting to chat...';
+        console.log('LOGIN SUCCESS:', res);
+
+        setTimeout(() => {
+          this.router.navigate(['/chat']);
+        }, 700);
+
+        localStorage.setItem('token', res.access_token);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMsg = err?.error?.message || 'Login failed';
+        this.successMsg = '';
+        console.error(err);
+      }
+    });
   }
 
   onSignup() {
+    this.signupForm.markAllAsTouched();
+
     if (this.signupForm.invalid) return;
 
-    const { password, confirmPassword } = this.signupForm.value;
-
-    if (password !== confirmPassword) {
-      this.errorMsg = "Passwords do not match";
-      return;
-    }
+    const { email, password } = this.signupForm.value;
 
     this.loading = true;
+    this.errorMsg = '';
+    this.successMsg = '';
 
-    setTimeout(() => {
-      this.loading = false;
-      console.log('SIGNUP:', this.signupForm.value);
-    }, 1200);
+    const payload = {
+      email,
+      password
+    };
+
+    this.authService.signup(payload).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.successMsg = 'Signup successful! You can now login.';
+        console.log('SIGNUP SUCCESS:', res);
+      },
+      error: (err) => {
+        console.log(err.error.detail,'error');
+        
+        this.loading = false;
+        this.errorMsg = err?.error?.detail || 'Signup failed';
+      }
+    });
   }
 
   get lf() {
