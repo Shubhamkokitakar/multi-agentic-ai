@@ -2,7 +2,7 @@
 
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { environment } from '../environments/environment.prod';
+import { environment } from '../environments/environment';
 
 
 @Injectable({
@@ -13,11 +13,12 @@ export class SocketService {
   private socket!: WebSocket;
 
   public messages$ = new Subject<any>();
+  baseUrl = `${environment.wsUrl}/auth/signup`
 
   connect() {
     console.log('inside socket loop');
     
-    this.socket = new WebSocket(environment.wsUrl);
+    this.socket = new WebSocket(this.baseUrl);
 
     this.socket.onopen = () => {
       console.log('Connected to backend');

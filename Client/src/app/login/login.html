@@ -19,16 +19,22 @@
       {{ mode === 'login' ? 'Login to continue' : 'Join us today' }}
     </p>
 
-    <!-- ERROR -->
+    <!-- STATUS MESSAGES -->
     <div class="error" *ngIf="errorMsg">
       {{ errorMsg }}
+    </div>
+    <div class="success" *ngIf="successMsg">
+      {{ successMsg }}
+    </div>
+    <div class="loader" *ngIf="loading">
+      Please wait...
     </div>
 
     <!-- LOGIN FORM -->
     <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()">
 
-      <input type="email" formControlName="email" placeholder="Email" />
-      <small *ngIf="lf.email.touched && lf.email.invalid">Invalid email</small>
+      <input type="text" formControlName="username" placeholder="Username" />
+      <small *ngIf="lf.username.touched && lf.username.invalid">Username required</small>
 
       <input type="password" formControlName="password" placeholder="Password" />
       <small *ngIf="lf.password.touched && lf.password.invalid">
@@ -42,23 +48,39 @@
     </form>
 
     <!-- SIGNUP FORM -->
-    <form *ngIf="mode === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()">
+<form *ngIf="mode === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()">
 
-      <input type="email" formControlName="email" placeholder="Email" />
+  <input type="text" formControlName="username" placeholder="Username" />
+  <small *ngIf="sf.username.touched && sf.username.invalid">
+    Username required
+  </small>
 
-      <input type="password" formControlName="password" placeholder="Password" />
+  <input type="email" formControlName="email" placeholder="Email" />
+  <small *ngIf="sf.email.touched && sf.email.invalid">
+    Valid email required
+  </small>
 
-      <input type="password" formControlName="confirmPassword" placeholder="Confirm Password" />
+  <input type="password" formControlName="password" placeholder="Password" />
+  <small *ngIf="sf.password.touched && sf.password.invalid">
+    Min 6 characters required
+  </small>
 
-      <small *ngIf="sf.password.touched && sf.confirmPassword.touched && sf.password.value !== sf.confirmPassword.value">
-        Passwords must match
-      </small>
+  <input type="password" formControlName="confirmPassword" placeholder="Confirm Password" />
 
-      <button type="submit" [disabled]="signupForm.invalid || loading">
-        {{ loading ? 'Creating account...' : 'Sign Up' }}
-      </button>
+  <small *ngIf="sf.confirmPassword.touched && sf.confirmPassword.invalid">
+    Confirm password required
+  </small>
 
-    </form>
+  <!-- mismatch error -->
+  <small *ngIf="signupForm.touched && signupForm.value.password !== signupForm.value.confirmPassword">
+    Passwords must match
+  </small>
+
+  <button type="submit" [disabled]="signupForm.invalid || loading">
+    {{ loading ? 'Creating account...' : 'Sign Up' }}
+  </button>
+
+</form>
 
   </div>
 </div>

@@ -5,8 +5,26 @@ from starlette.websockets import WebSocketDisconnect
 from graph.cricket_graph import graph
 from langchain_openai import ChatOpenAI
 load_dotenv()
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+# Wire auth router and ensure DB tables exist
+from database import models
+from database.db import engine
+from auth import router as auth_router
+
+models.Base.metadata.create_all(bind=engine)
+app.include_router(auth_router)
+from neon_vectors import router as neon_router
+app.include_router(neon_router)
 
 
 @app.websocket("/ws")
