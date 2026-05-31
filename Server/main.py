@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from database.db import engine
 from authentication.models import Base
 from database.db import engine
