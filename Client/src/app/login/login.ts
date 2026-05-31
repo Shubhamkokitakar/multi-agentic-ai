@@ -3,10 +3,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth-service';
 import { Router } from '@angular/router';
+import { Spinner } from '../shared/spinner/spinner';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule,CommonModule,ReactiveFormsModule],
+  imports: [FormsModule,CommonModule,ReactiveFormsModule,Spinner],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -24,15 +25,13 @@ export class Login {
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
 
     this.signupForm = this.fb.group({
-      username: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -41,61 +40,53 @@ export class Login {
     this.errorMsg = '';
   }
 
-onLogin() {
-  this.loginForm.markAllAsTouched();
+  onLogin() {
+    this.loginForm.markAllAsTouched();
 
-  if (this.loginForm.invalid) return;
-
-  this.loading = true;
-  this.errorMsg = '';
-  this.successMsg = '';
-
-  const payload = {
-    username: this.loginForm.value.username,
-    password: this.loginForm.value.password
-  };
-
-  this.authService.login(payload).subscribe({
-    next: (res) => {
-      this.loading = false;
-      this.successMsg = 'Login successful! Redirecting to chat...';
-      console.log('LOGIN SUCCESS:', res);
-
-      setTimeout(() => {
-        this.router.navigate(['/chat']);
-      }, 700);
-
-      // optional: store token if backend sends it
-      // localStorage.setItem('token', res.token);
-    },
-    error: (err) => {
-      this.loading = false;
-      this.errorMsg = err?.error?.message || 'Login failed';
-      this.successMsg = '';
-      console.error(err);
-    }
-  });
-}
-
-  onSignup() {
-    this.signupForm.markAllAsTouched();
-
-    if (this.signupForm.invalid) return;
-
-    const { username, email, password, confirmPassword } = this.signupForm.value;
-
-    if (password !== confirmPassword) {
-      this.errorMsg = 'Passwords do not match';
-      this.successMsg = '';
-      return;
-    }
+    if (this.loginForm.invalid) return;
 
     this.loading = true;
     this.errorMsg = '';
     this.successMsg = '';
 
     const payload = {
-      username,
+      email: this.loginForm.value.email,
+      password: this.loginForm.value.password
+    };
+
+    this.authService.login(payload).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.successMsg = 'Login successful! Redirecting to chat...';
+        console.log('LOGIN SUCCESS:', res);
+
+        setTimeout(() => {
+          this.router.navigate(['/chat']);
+        }, 700);
+
+        localStorage.setItem('token', res.token);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMsg = err?.error?.message || 'Login failed';
+        this.successMsg = '';
+        console.error(err);
+      }
+    });
+  }
+
+  onSignup() {
+    this.signupForm.markAllAsTouched();
+
+    if (this.signupForm.invalid) return;
+
+    const { email, password } = this.signupForm.value;
+
+    this.loading = true;
+    this.errorMsg = '';
+    this.successMsg = '';
+
+    const payload = {
       email,
       password
     };
@@ -107,9 +98,10 @@ onLogin() {
         console.log('SIGNUP SUCCESS:', res);
       },
       error: (err) => {
+        console.log(err.error.detail,'error');
+        
         this.loading = false;
-        this.errorMsg = err?.error?.message || 'Signup failed';
-        console.error(err);
+        this.errorMsg = err?.error?.detail || 'Signup failed';
       }
     });
   }

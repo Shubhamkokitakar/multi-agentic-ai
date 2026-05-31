@@ -33,8 +33,8 @@
     <!-- LOGIN FORM -->
     <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="onLogin()">
 
-      <input type="text" formControlName="username" placeholder="Username" />
-      <small *ngIf="lf.username.touched && lf.username.invalid">Username required</small>
+      <input type="email" formControlName="email" placeholder="Email" />
+      <small *ngIf="lf.email.touched && lf.email.invalid">Valid email required</small>
 
       <input type="password" formControlName="password" placeholder="Password" />
       <small *ngIf="lf.password.touched && lf.password.invalid">
@@ -50,11 +50,6 @@
     <!-- SIGNUP FORM -->
 <form *ngIf="mode === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSignup()">
 
-  <input type="text" formControlName="username" placeholder="Username" />
-  <small *ngIf="sf.username.touched && sf.username.invalid">
-    Username required
-  </small>
-
   <input type="email" formControlName="email" placeholder="Email" />
   <small *ngIf="sf.email.touched && sf.email.invalid">
     Valid email required
@@ -65,17 +60,6 @@
     Min 6 characters required
   </small>
 
-  <input type="password" formControlName="confirmPassword" placeholder="Confirm Password" />
-
-  <small *ngIf="sf.confirmPassword.touched && sf.confirmPassword.invalid">
-    Confirm password required
-  </small>
-
-  <!-- mismatch error -->
-  <small *ngIf="signupForm.touched && signupForm.value.password !== signupForm.value.confirmPassword">
-    Passwords must match
-  </small>
-
   <button type="submit" [disabled]="signupForm.invalid || loading">
     {{ loading ? 'Creating account...' : 'Sign Up' }}
   </button>
@@ -83,4 +67,7 @@
 </form>
 
   </div>
+</div>
+<div class="overlay" *ngIf="loading">
+  <app-spinner [size]="60"></app-spinner>
 </div>

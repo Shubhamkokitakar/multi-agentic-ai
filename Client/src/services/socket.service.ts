@@ -13,7 +13,7 @@ export class SocketService {
   private socket!: WebSocket;
 
   public messages$ = new Subject<any>();
-  baseUrl = `${environment.wsUrl}/auth/signup`
+  baseUrl = `${environment.wsUrl}/ws`
 
   connect() {
     console.log('inside socket loop');
