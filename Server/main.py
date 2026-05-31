@@ -10,7 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+     allow_origins=[
+        "http://localhost:4200",
+        "https://multi-agentic-ai-1.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -30,7 +33,27 @@ app.include_router(neon_router)
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
 
+
+    allowed_origins = {
+        "http://localhost:4200",
+        "https://multi-agentic-ai-1.onrender.com"
+    }
+
+    origin = websocket.headers.get("origin")
+
+    if origin not in allowed_origins:
+        await websocket.close(code=1008)
+        return
+    
+    token = websocket.query_params.get("token")
+    print("TOKEN:", token)
+
+    if not token:
+        await websocket.close(code=1008, reason="Missing token")
+        return
+
     await websocket.accept()
+
     conversation_history = []
 
 

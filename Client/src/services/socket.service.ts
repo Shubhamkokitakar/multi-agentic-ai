@@ -11,6 +11,8 @@ import { environment } from '../environments/environment';
 export class SocketService {
 
   private socket!: WebSocket;
+   token = localStorage.getItem("token");
+
 
   public messages$ = new Subject<any>();
   baseUrl = `${environment.wsUrl}/ws`
@@ -18,7 +20,7 @@ export class SocketService {
   connect() {
     console.log('inside socket loop');
     
-    this.socket = new WebSocket(this.baseUrl);
+    this.socket = new WebSocket(`${this.baseUrl}?token=${this.token}`);
 
     this.socket.onopen = () => {
       console.log('Connected to backend');

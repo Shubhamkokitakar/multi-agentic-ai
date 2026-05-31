@@ -64,7 +64,7 @@ export class Login {
           this.router.navigate(['/chat']);
         }, 700);
 
-        localStorage.setItem('token', res.token);
+        localStorage.setItem('token', res.access_token);
       },
       error: (err) => {
         this.loading = false;
