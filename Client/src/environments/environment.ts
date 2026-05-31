@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  wsUrl: 'http://localhost:8000'
+  wsUrl: 'https://multi-agentic-ai.onrender.com'
 };
