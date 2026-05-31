@@ -11,15 +11,17 @@ graph TD
 
     B --> C["LangGraph Workflow"]
 
-    C --> D1["Rewrite Agent"]
-    D1 --> D2["Router Agent"]
+    C --> D["Router Agent"]
 
-    D2 -->|General Cricket Query| E1["Generic Agent"]
-    D2 -->|Historical / Knowledge Query| E2["RAG Agent"]
-    D2 -->|Live Match Query| E3["Live Agent"]
+    D -->|Greeting / Small Talk| E1["Generic Agent"]
 
-    E1 --> F["Follow-up Agent"]
-    E2 --> F
+    D -->|Historical / Knowledge Query| R["Rewrite Agent"]
+    D -->|Live Match Query| R
+
+    R --> E2["RAG Agent"]
+    R --> E3["Live Agent"]
+
+    E2 --> F["Follow-up Agent"]
     E3 --> F
 
     E2 --> G1["Chroma Vector DB"]
@@ -33,31 +35,95 @@ graph TD
     B --> I["Session Memory"]
     I --> I1["Conversation History"]
 
-    style D1 fill:#e1f5fe
-    style D2 fill:#fff3e0
+    style D fill:#fff3e0
+    style R fill:#e1f5fe
     style E1 fill:#f3e5f5
     style E2 fill:#e8f5e9
     style E3 fill:#fce4ec
     style F fill:#ede7f6
 ```
 
-## Features
+## LangGraph Flow
 
-* Real-time cricket match updates
-* Cricket knowledge Q&A
-* RAG-based retrieval using vector database
-* Live cricket API integration
-* Conversational memory support
-* Multi-agent workflow using LangGraph
-* WebSocket-based streaming responses
+```text
+START
+  │
+  ▼
+Router
+  │
+  ├── Greeting / Small Talk
+  │       │
+  │       ▼
+  │   Generic Agent
+  │       │
+  │       ▼
+  │      END
+  │
+  ├── Live Query
+  │       │
+  │       ▼
+  │   Rewrite Agent
+  │       │
+  │       ▼
+  │    Live Agent
+  │       │
+  │       ▼
+  │   Follow-up Agent
+  │       │
+  │       ▼
+  │      END
+  │
+  └── Knowledge Query
+          │
+          ▼
+      Rewrite Agent
+          │
+          ▼
+       RAG Agent
+          │
+          ▼
+      Follow-up Agent
+          │
+          ▼
+         END
 
+```
 ## Tech Stack
 
-* FastAPI
-* LangGraph
-* LangChain
-* LangSmith
-* OpenAI GPT-4.1-mini
-* ChromaDB
-* WebSockets
-* CricAPI
+### Backend
+- FastAPI
+- WebSockets
+- LangGraph
+- LangChain
+- OpenAI GPT-4.1-mini
+- SQLAlchemy
+- PostgreSQL
+- JWT Authentication
+
+### Retrieval & AI
+- ChromaDB (Vector Database)
+- Retrieval-Augmented Generation (RAG)
+- OpenAI Embeddings
+- LangSmith (Tracing & Monitoring)
+
+### Data Sources
+- CricAPI (Live Cricket Data)
+
+### Frontend
+- Angular
+- TypeScript
+- HTML
+- CSS
+
+### Infrastructure
+- Docker
+- Render (Deployment)
+
+### Database Schema
+- Users Table
+  - Email
+  - Hashed Password
+  - Created Timestamp
+
+
+
