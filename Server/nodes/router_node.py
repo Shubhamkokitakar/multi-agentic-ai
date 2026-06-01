@@ -1,3 +1,5 @@
+import re
+
 from graph.state import GraphState
 
 LIVE_KEYWORDS = [
@@ -9,16 +11,43 @@ LIVE_KEYWORDS = [
     "ipl"
 ]
 
-GENERIC_KEYWORDS = [
-    "hi",
-    "hello",
-    "hey",
-    "thanks",
-    "thank you",
-    "good morning",
-    "good evening",
-    "how are you"
+GENERIC_PATTERNS = [
+    r"hi",
+    r"hello",
+    r"hey",
+    r"thanks",
+    r"thank you",
+    r"good morning",
+    r"good evening",
+    r"how are you"
 ]
+
+
+def is_generic_message(question: str) -> bool:
+    """
+    Returns True only when the user's message is primarily
+    a greeting/social interaction and not an actual question.
+    """
+
+    question = question.lower().strip()
+
+    # Remove punctuation
+    normalized = re.sub(r"[^\w\s]", "", question)
+
+    # Exact greeting match
+    if normalized in GENERIC_PATTERNS:
+        return True
+
+    # Allow simple variants such as:
+    # "hi there"
+    # "hello bot"
+    # "hey buddy"
+    greeting_regex = (
+        r"^(hi|hello|hey|thanks|thank you|good morning|"
+        r"good evening|how are you)(\s+\w+){0,3}$"
+    )
+
+    return bool(re.match(greeting_regex, normalized))
 
 
 # ----------------------------
@@ -26,13 +55,6 @@ GENERIC_KEYWORDS = [
 # ----------------------------
 async def router_node(state: GraphState):
 
-    stage_callback = state.get("stage_callback")
-
-    # Send stage from node itself
-    if stage_callback:
-        await stage_callback(
-            "Understanding your question..."
-        )
 
     question = state.get(
         "standalone_question",
@@ -42,22 +64,24 @@ async def router_node(state: GraphState):
     # ----------------------------
     # GENERIC ROUTE
     # ----------------------------
-    if any(k in question for k in GENERIC_KEYWORDS):
+    if is_generic_message(question):
 
         state["route"] = "generic"
         state["stage"] = "greeting_detected"
-        state["route_reason"] = "greeting_match"
-        state["route_confidence"] = 1.0
+        return state
+
 
     # ----------------------------
     # LIVE ROUTE
     # ----------------------------
-    elif any(k in question for k in LIVE_KEYWORDS):
+    if any(
+        re.search(rf"\b{re.escape(k)}\b", question)
+        for k in LIVE_KEYWORDS
+    ):
 
         state["route"] = "live"
-        state["stage"] = "live_intent_detected"
-        state["route_reason"] = "keyword_live_match"
-        state["route_confidence"] = 0.8
+        return state
+
 
     # ----------------------------
     # RAG ROUTE
@@ -65,8 +89,5 @@ async def router_node(state: GraphState):
     else:
 
         state["route"] = "rag"
-        state["stage"] = "knowledge_intent_detected"
-        state["route_reason"] = "default_fallback"
-        state["route_confidence"] = 0.5
 
     return state
