@@ -22,7 +22,6 @@ async def websocket_endpoint(websocket: WebSocket):
     conversation_history = []
 
     try:
-
         while True:
 
             question = await websocket.receive_text()
@@ -30,33 +29,25 @@ async def websocket_endpoint(websocket: WebSocket):
             final_answer = ""
             final_followups = []
 
-            retrieval_sent = False
-            generation_sent = False
-
             # -------------------------
-            # TOKEN STREAMING CALLBACK
+            # TOKEN STREAM
             # -------------------------
             async def send_token(token: str):
-
                 await websocket.send_json({
                     "type": "token",
                     "value": token
                 })
 
             # -------------------------
-            # STAGE CALLBACK
+            # STAGE STREAM
             # -------------------------
-            async def send_stage(message: str):
-
-                await websocket.send_json({
-                    "type": "stage",
-                    "message": message
-                })
+            async def send_stage(payload: dict):
+                await websocket.send_json(payload)
 
             # -------------------------
             # RUN GRAPH
             # -------------------------
-            async for event in graph.astream(
+            async for state in graph.astream(
                 {
                     "question": question,
                     "history": conversation_history,
@@ -66,66 +57,23 @@ async def websocket_endpoint(websocket: WebSocket):
                 stream_mode="values"
             ):
 
-                print("EVENT:", event)
+                print("STATE:", state)
 
-                # -------------------------
-                # Retrieval stage
-                # -------------------------
-                if (
-                    event.get("route") == "rag"
-                    and not retrieval_sent
-                ):
+                if state.get("response"):
+                    final_answer = state["response"]
 
-                    await send_stage(
-                        "Looking for relevant information..."
-                    )
+                if state.get("follow_ups"):
+                    final_followups = state["follow_ups"]
 
-                    retrieval_sent = True
-
-                # -------------------------
-                # Generation stage
-                # -------------------------
-                if (
-                    event.get("retrieved_docs")
-                    and not generation_sent
-                ):
-
-                    await send_stage(
-                        "Generating answer..."
-                    )
-
-                    generation_sent = True
-
-                # -------------------------
-                # Capture final response
-                # -------------------------
-                if event.get("response"):
-                    final_answer = event["response"]
-
-                if event.get("follow_ups"):
-                    final_followups = event["follow_ups"]
-
-            # -------------------------
-            # Final message
-            # -------------------------
             await websocket.send_json({
                 "type": "final",
                 "answer": final_answer,
                 "follow_ups": final_followups
             })
 
-            # -------------------------
-            # Save history
-            # -------------------------
             conversation_history.extend([
-                {
-                    "role": "user",
-                    "content": question
-                },
-                {
-                    "role": "assistant",
-                    "content": final_answer
-                }
+                {"role": "user", "content": question},
+                {"role": "assistant", "content": final_answer}
             ])
 
     except WebSocketDisconnect:
