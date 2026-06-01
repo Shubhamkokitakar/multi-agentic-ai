@@ -90,10 +90,16 @@ async def websocket_endpoint(websocket: WebSocket):
                 "follow_ups": final_followups
             })
 
-            conversation_history.append({
-                "question": question,
-                "answer": final_answer
-            })
+            conversation_history.extend([
+               {
+                "role": "user",
+                "content": question
+               },
+                {
+                "role": "assistant",
+                "content": final_answer
+                }
+            ])
 
     except WebSocketDisconnect:
         print(f"CLIENT DISCONNECTED: {email}")
