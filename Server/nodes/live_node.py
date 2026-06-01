@@ -11,6 +11,9 @@ async def live_node(state: GraphState):
     )
 
     state["response"] = result
+    state["show_followup"] = (
+        result != "I could not find the answer in the knowledge base."
+    )
 
     return state
 

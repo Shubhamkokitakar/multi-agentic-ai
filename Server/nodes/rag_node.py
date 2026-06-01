@@ -15,5 +15,8 @@ async def rag_node(state: GraphState):
     result = await rag_agent(search_q)
 
     state["response"] = result
+    state["show_followup"] = (
+        result != "I could not find the answer in the knowledge base."
+    )
 
     return state

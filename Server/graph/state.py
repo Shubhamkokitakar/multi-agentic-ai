@@ -10,4 +10,5 @@ class GraphState(TypedDict, total=False):
     follow_ups: str
     history: list[dict[str, str]]
     standalone_question: str
-    retrieved_docs: list[str]  # NEW
+    retrieved_docs: list[str]
+    show_followup: bool
