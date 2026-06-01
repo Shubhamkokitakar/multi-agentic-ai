@@ -59,9 +59,58 @@ workflow.add_conditional_edges(
 
 workflow.add_edge("generic_agent", END)
 
-workflow.add_edge("live", "follow_up")
-workflow.add_edge("rag", "follow_up")
+# ----------------------------
+# FOLLOW-UP DECISION LOGIC
+# ----------------------------
+def should_follow_up(state: GraphState):
 
+    response = state.get("response", "")
+
+    # safest check (avoid brittle exact match in real systems)
+    fallback_phrases = [
+        "I could not find the answer in the knowledge base",
+        "not found",
+        "no relevant information",
+    ]
+
+    is_fallback = any(p.lower() in response.lower() for p in fallback_phrases)
+
+    if is_fallback:
+        return "end"
+
+    # optional explicit override if you set it in nodes
+    if state.get("show_followup") is False:
+        return "end"
+
+    return "follow_up"
+
+# ----------------------------
+# LIVE FLOW
+# ----------------------------
+workflow.add_conditional_edges(
+    "live",
+    should_follow_up,
+    {
+        "follow_up": "follow_up",
+        "end": END,
+    }
+)
+
+# ----------------------------
+# RAG FLOW
+# ----------------------------
+workflow.add_conditional_edges(
+    "rag",
+    should_follow_up,
+    {
+        "follow_up": "follow_up",
+        "end": END,
+    }
+)
+
+# ----------------------------
+# TERMINATION
+# ----------------------------
 workflow.add_edge("follow_up", END)
 
 # ----------------------------

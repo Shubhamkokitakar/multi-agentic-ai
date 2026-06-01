@@ -6,14 +6,14 @@
 
   <div class="messages">
 
-    <div *ngIf="messages.length === 0" class="welcome-message">
+    <div *ngIf="messages.length === 0 && !stageVisible" class="welcome-message">
       Ask me anything related to cricket 🏏
     </div>
 
     <div
-      *ngFor="let msg of messages"
+      *ngFor="let msg of messages; let i = index"
       class="message-wrapper"
-      [ngClass]="msg.role"
+      [ngClass]="{ user: msg.role === 'user', assistant: msg.role === 'assistant', final: msg.type === 'final' }"
     >
       <div class="message-bubble">
 
@@ -34,9 +34,11 @@
       </div>
     </div>
 
-    <div *ngIf="loading" class="typing">
-      Thinking...
+    <div *ngIf="stageVisible && messages.length && messages[messages.length-1].role === 'user'" class="stage-line">
+      <span class="stage-text">{{ stageText }}</span>
+      <span class="stage-spinner"></span>
     </div>
+
 
   </div>
 
