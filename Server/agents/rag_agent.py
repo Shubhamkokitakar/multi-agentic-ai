@@ -1,26 +1,20 @@
 from database.vector_store import search_documents
-import os
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-4.1-mini")
+llm = ChatOpenAI(
+    model="gpt-4.1-mini"
+)
 
 
-async def rag_agent(question: str):
+async def rag_agent(
+    question: str,
+    token_callback=None
+):
 
-    print(question, 'question in rag agent')
-
-    # -------------------------
-    # RETRIEVE CONTEXT
-    # -------------------------
     documents = search_documents(question)
-    print(documents, 'documents retrieved in rag agent')
 
     context = "\n\n".join(documents)
-    print(context, 'context in rag agent')
 
-    # -------------------------
-    # GROUNDED PROMPT
-    # -------------------------
     prompt = f"""
 You are a cricket assistant.
 
@@ -38,9 +32,18 @@ QUESTION:
 {question}
 """
 
-    # -------------------------
-    # LLM CALL
-    # -------------------------
-    response = await llm.ainvoke(prompt)
-    print(response.content.strip(), 'response in rag agent')
-    return response.content.strip()
+    full_response = ""
+
+    async for chunk in llm.astream(prompt):
+
+        token = chunk.content
+
+        if not token:
+            continue
+
+        full_response += token
+
+        if token_callback:
+            await token_callback(token)
+
+    return full_response.strip()

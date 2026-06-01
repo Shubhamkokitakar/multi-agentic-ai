@@ -21,7 +21,7 @@ export class Chat {
     private socketService: SocketService,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
 
@@ -53,8 +53,8 @@ export class Chat {
         if (data?.type === 'stage') {
           this.stageText = data.message || '';
           this.stageVisible = true;
-        } else if (data?.type === 'delta') {
-          const deltaText = data.text || '';
+        } else if (data?.type === 'token') {
+          const deltaText = data.value || '';
 
           if (streamingIndex >= 0) {
             this.messages[streamingIndex] = {
@@ -84,8 +84,7 @@ export class Chat {
 
           if (finalStreamingIndex >= 0) {
             this.messages[finalStreamingIndex] = {
-              role: 'assistant',
-              content: answer,
+              ...this.messages[finalStreamingIndex],
               followUps,
               type: 'final',
               streaming: false

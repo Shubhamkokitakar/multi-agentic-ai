@@ -22,84 +22,114 @@ async def websocket_endpoint(websocket: WebSocket):
     conversation_history = []
 
     try:
+
         while True:
 
             question = await websocket.receive_text()
 
-            sent_stages = set()
             final_answer = ""
             final_followups = []
 
-            event_count = 0
+            retrieval_sent = False
+            generation_sent = False
 
+            # -------------------------
+            # TOKEN STREAMING CALLBACK
+            # -------------------------
+            async def send_token(token: str):
+
+                await websocket.send_json({
+                    "type": "token",
+                    "value": token
+                })
+
+            # -------------------------
+            # STAGE CALLBACK
+            # -------------------------
+            async def send_stage(message: str):
+
+                await websocket.send_json({
+                    "type": "stage",
+                    "message": message
+                })
+
+            # -------------------------
+            # RUN GRAPH
+            # -------------------------
             async for event in graph.astream(
                 {
                     "question": question,
-                    "history": conversation_history
+                    "history": conversation_history,
+                    "token_callback": send_token,
+                    "stage_callback": send_stage
                 },
                 stream_mode="values"
             ):
 
-                event_count += 1
-                print(f"EVENT #{event_count}: {event}")
+                print("EVENT:", event)
 
-                # ----------------------------
-                # ROUTING STAGE
-                # ----------------------------
-                if event.get("route") and "route" not in sent_stages:
-                    await websocket.send_json({
-                        "type": "stage",
-                        "message": "Understanding your question..."
-                    })
-                    sent_stages.add("route")
+                # -------------------------
+                # Retrieval stage
+                # -------------------------
+                if (
+                    event.get("route") == "rag"
+                    and not retrieval_sent
+                ):
 
-                # ----------------------------
-                # RETRIEVAL STAGE
-                # ----------------------------
-                if event.get("retrieved_docs") and "retrieval" not in sent_stages:
-                    await websocket.send_json({
-                        "type": "stage",
-                        "message": "Looking for relevant information..."
-                    })
-                    sent_stages.add("retrieval")
+                    await send_stage(
+                        "Looking for relevant information..."
+                    )
 
-                # ----------------------------
-                # GENERATION STAGE
-                # ----------------------------
-                if event.get("response") and "generation" not in sent_stages:
-                    await websocket.send_json({
-                        "type": "stage",
-                        "message": "Generating answer..."
-                    })
-                    sent_stages.add("generation")
+                    retrieval_sent = True
 
-                # ----------------------------
-                # CAPTURE FINAL OUTPUT
-                # ----------------------------
+                # -------------------------
+                # Generation stage
+                # -------------------------
+                if (
+                    event.get("retrieved_docs")
+                    and not generation_sent
+                ):
+
+                    await send_stage(
+                        "Generating answer..."
+                    )
+
+                    generation_sent = True
+
+                # -------------------------
+                # Capture final response
+                # -------------------------
                 if event.get("response"):
                     final_answer = event["response"]
 
                 if event.get("follow_ups"):
                     final_followups = event["follow_ups"]
 
-            print(f"TOTAL EVENTS RECEIVED: {event_count}")
-
+            # -------------------------
+            # Final message
+            # -------------------------
             await websocket.send_json({
                 "type": "final",
                 "answer": final_answer,
                 "follow_ups": final_followups
             })
 
+            # -------------------------
+            # Save history
+            # -------------------------
             conversation_history.extend([
-               {
-                "role": "user",
-                "content": question
-               },
                 {
-                "role": "assistant",
-                "content": final_answer
+                    "role": "user",
+                    "content": question
+                },
+                {
+                    "role": "assistant",
+                    "content": final_answer
                 }
             ])
 
     except WebSocketDisconnect:
         print(f"CLIENT DISCONNECTED: {email}")
+
+    except Exception as e:
+        print("WEBSOCKET ERROR:", str(e))
