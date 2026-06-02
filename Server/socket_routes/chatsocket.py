@@ -10,14 +10,16 @@ router = APIRouter()
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
 
+    await websocket.accept()
+
     token = websocket.query_params.get("token")
+
     email = verify_token(token)
 
     if not email:
         await websocket.close(code=1008)
         return
 
-    await websocket.accept()
 
     conversation_history = []
 
@@ -70,7 +72,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 {"role": "user", "content": question},
                 {"role": "assistant", "content": final_answer},
             ])
-
+            conversation_history = conversation_history[-10:]
     except WebSocketDisconnect:
         print(f"CLIENT DISCONNECTED: {email}")
 
