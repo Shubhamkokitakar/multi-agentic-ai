@@ -1,6 +1,23 @@
-# Cricket RAG Chatbot
+---
 
-A chatbot that answers cricket-related questions and provides live match data and updates.
+## 🌐 Live Demo
+
+https://multi-agentic-ai-1.onrender.com/login
+
+---
+
+## ⚙️ Features
+
+- 👋 **Greetings Support**  
+  Handles basic inputs like *Hi* and *Hello*
+
+- 🏏 **Cricket Q&A (RAG-based)**  
+  Answers cricket-related questions such as rules, formats, and terminology  
+  Example: *What is a white ball?*
+
+- 📡 **Live Match Data (Tool Calling)**  
+  Fetches real-time/scheduled cricket matches  
+  Example: *What matches are scheduled today?*
 
 ## System Architecture
 
