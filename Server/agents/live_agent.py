@@ -1,9 +1,9 @@
-
 import os
 import requests
 
 from typing import List, Dict, Any
 from dotenv import load_dotenv
+from langchain_core.callbacks.manager import adispatch_custom_event
 from langchain_openai import ChatOpenAI
 
 load_dotenv()
@@ -132,22 +132,34 @@ Return the answer in the following format:
 
 🏏 Match Name
 
-• Status:
-• Score:
-• Venue:
+- Status:
+- Score:
+- Venue:
 
 ------------------
 
 🏏 Match Name
 
-• Status:
-• Score:
-• Venue:
+- Status:
+- Score:
+- Venue:
 
 Keep the response concise and highly readable.
 """
 
-    response = llm.invoke(prompt)
+    full_response = []
 
-    return response.content
+    async for chunk in llm.astream(prompt):
+        token = getattr(chunk, "content", None)
 
+        if not token:
+            continue
+
+        full_response.append(token)
+
+        await adispatch_custom_event(
+            "token",
+            {"type": "token", "value": token}
+        )
+
+    return "".join(full_response).strip()

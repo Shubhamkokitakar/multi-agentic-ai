@@ -1,5 +1,4 @@
-
-from typing import TypedDict
+from typing import Any, TypedDict
 
 
 class GraphState(TypedDict, total=False):
@@ -10,4 +9,8 @@ class GraphState(TypedDict, total=False):
     follow_ups: str
     history: list[dict[str, str]]
     standalone_question: str
-    retrieved_docs: list[str]  # NEW
+    retrieved_docs: list[str]
+    show_followup: bool
+
+    token_callback: Any
+    stage_callback: Any
