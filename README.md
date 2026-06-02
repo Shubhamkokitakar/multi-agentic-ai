@@ -62,51 +62,6 @@ graph TD
     style E2 fill:#e8f5e9
     style E3 fill:#fce4ec
     style F fill:#ede7f6
-```
-
-## LangGraph Flow
-
-```text
-START
-  │
-  ▼
-Router
-  │
-  ├── Greeting / Small Talk
-  │       │
-  │       ▼
-  │   Generic Agent
-  │       │
-  │       ▼
-  │      END
-  │
-  ├── Live Query
-  │       │
-  │       ▼
-  │   Rewrite Agent
-  │       │
-  │       ▼
-  │    Live Agent
-  │       │
-  │       ▼
-  │   Follow-up Agent
-  │       │
-  │       ▼
-  │      END
-  │
-  └── Knowledge Query
-          │
-          ▼
-      Rewrite Agent
-          │
-          ▼
-       RAG Agent
-          │
-          ▼
-      Follow-up Agent
-          │
-          ▼
-         END
 
 ```
 ## Tech Stack
