@@ -67,7 +67,6 @@ async def router_node(state: GraphState):
     if is_generic_message(question):
 
         state["route"] = "generic"
-        state["stage"] = "greeting_detected"
         return state
 
 

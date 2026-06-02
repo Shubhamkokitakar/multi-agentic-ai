@@ -2,8 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.db import engine
 from authentication.models import Base
-from database.db import engine
-
 from authentication.auth import router as auth_router
 from socket_routes.chatsocket import router as websocket_router
 
