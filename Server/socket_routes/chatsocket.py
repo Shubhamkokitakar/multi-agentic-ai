@@ -23,57 +23,52 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-
             question = await websocket.receive_text()
 
             final_answer = ""
             final_followups = []
 
             # -------------------------
-            # TOKEN STREAM
+            # STREAM EVENTS FROM GRAPH
+            # astream_events replaces astream + manual callbacks.
+            # version="v2" is required for LangGraph >= 0.2.
             # -------------------------
-            async def send_token(token: str):
-                await websocket.send_json({
-                    "type": "token",
-                    "value": token
-                })
-
-            # -------------------------
-            # STAGE STREAM
-            # -------------------------
-            async def send_stage(payload: dict):
-                await websocket.send_json(payload)
-
-            # -------------------------
-            # RUN GRAPH
-            # -------------------------
-            async for state in graph.astream(
+            async for event in graph.astream_events(
                 {
                     "question": question,
                     "history": conversation_history,
-                    "token_callback": send_token,
-                    "stage_callback": send_stage
                 },
-                stream_mode="values"
+                version="v2",
             ):
+                kind = event["event"]
+                data = event.get("data", {})
 
-                print("STATE:", state)
+                # LLM token streamed from rag_agent
+                if kind == "on_custom_event" and event.get("name") == "token":
+                    await websocket.send_json(data)
 
-                if state.get("response"):
-                    final_answer = state["response"]
+                # Stage updates dispatched from rag_node
+                elif kind == "on_custom_event" and event.get("name") == "stage":
+                    await websocket.send_json(data)
 
-                if state.get("follow_ups"):
-                    final_followups = state["follow_ups"]
+                # Capture final graph output from each state update
+                elif kind == "on_chain_end":
+                    output = data.get("output", {})
+                    if isinstance(output, dict):
+                        if output.get("response"):
+                            final_answer = output["response"]
+                        if output.get("follow_ups"):
+                            final_followups = output["follow_ups"]
 
             await websocket.send_json({
                 "type": "final",
                 "answer": final_answer,
-                "follow_ups": final_followups
+                "follow_ups": final_followups,
             })
 
             conversation_history.extend([
                 {"role": "user", "content": question},
-                {"role": "assistant", "content": final_answer}
+                {"role": "assistant", "content": final_answer},
             ])
 
     except WebSocketDisconnect:
