@@ -1,3 +1,7 @@
+# 🏏 Cricket RAG Chatbot
+
+A Retrieval-Augmented Generation (RAG) chatbot that answers cricket-related queries and provides live match schedules and updates through tool integration.
+
 ---
 
 ## 🌐 Live Demo
