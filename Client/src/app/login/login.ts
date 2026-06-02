@@ -95,12 +95,17 @@ export class Login {
     this.authService.signup(payload).subscribe({
       next: (res) => {
         this.loading = false;
-        this.successMsg = 'Signup successful! You can now login.';
+        this.successMsg = 'Signup successful! Redirecting to login...';
         console.log('SIGNUP SUCCESS:', res);
+        
+        setTimeout(() => {
+          this.mode = 'login';
+          this.signupForm.reset();
+          this.successMsg = '';
+        }, 1500);
       },
       error: (err) => {
         console.log(err.error.detail,'error');
-        
         this.loading = false;
         this.errorMsg = err?.error?.detail || 'Signup failed';
       }
