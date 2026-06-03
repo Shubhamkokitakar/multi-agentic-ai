@@ -27,6 +27,12 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             question = await websocket.receive_text()
 
+            await websocket.send_json({
+             "type": "stage",
+             "stage": "received",
+             "message": "Question received"
+            })
+
             final_answer = ""
             final_followups = []
 

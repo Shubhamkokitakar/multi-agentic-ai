@@ -1,5 +1,5 @@
 import re
-
+from langchain_core.callbacks.manager import adispatch_custom_event
 from graph.state import GraphState
 
 LIVE_KEYWORDS = [
@@ -54,6 +54,16 @@ def is_generic_message(question: str) -> bool:
 # ROUTER NODE
 # ----------------------------
 async def router_node(state: GraphState):
+
+    await adispatch_custom_event(
+        "stage",
+        {
+            "type": "stage",
+            "stage": "intent_detection",
+            "message": "Analyzing question..."
+        },
+    )
+
 
 
     question = state.get(
