@@ -3,6 +3,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { environment } from '../environments/environment';
+import { Router } from '@angular/router';
 
 
 @Injectable({
@@ -11,7 +12,9 @@ import { environment } from '../environments/environment';
 export class SocketService {
 
   private socket!: WebSocket;
-   token = localStorage.getItem("token");
+  private reconnecting = false;
+  token = localStorage.getItem("token");
+  router!:Router;
 
 
   public messages$ = new Subject<any>();
@@ -19,6 +22,15 @@ export class SocketService {
 
   connect() {
     console.log('inside socket loop');
+
+     if (this.isTokenExpired()) {
+
+    localStorage.removeItem('token');
+
+    this.router.navigate(['/login']);
+
+    return;
+  }
     
     this.socket = new WebSocket(`${this.baseUrl}?token=${this.token}`);
 
@@ -38,13 +50,17 @@ export class SocketService {
     };
 
     this.socket.onclose = () => {
-      console.log('Socket disconnected');
+    console.log('DISCONNECTED');
+      this.startReconnect();
+
     };
   }
 
   sendQuestion(question: string) {
 
     if (this.socket.readyState === WebSocket.OPEN) {
+    console.log('Socket not connected. Reconnecting...');
+
 
       this.socket.send(question);
 
@@ -53,4 +69,69 @@ export class SocketService {
       console.log('Socket not connected');
     }
   }
+
+  private startReconnect() {
+
+  if (this.reconnecting) {
+    return;
+  }
+
+  this.reconnecting = true;
+
+  const reconnect = () => {
+
+    setTimeout(() => {
+
+      if (this.isTokenExpired()) {
+
+        console.log('JWT expired');
+
+        localStorage.removeItem('token');
+
+        this.socket?.close();
+
+        this.router.navigate(['/login']);
+
+        return;
+      }
+
+      if (this.socket?.readyState === WebSocket.OPEN) {
+        this.reconnecting = false;
+        return;
+      }
+
+      console.log('RECONNECTING...');
+
+      this.connect();
+
+      reconnect();
+
+    }, 5000);
+
+  };
+
+  reconnect();
+  }
+
+private isTokenExpired(): boolean {
+
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    return true;
+  }
+
+  try {
+
+    const payload = JSON.parse(
+      atob(token.split('.')[1])
+    );
+    console.log(payload,'payload');
+    
+    return payload.exp * 1000 < Date.now();
+
+  } catch {
+    return true;
+  }
+}
 }

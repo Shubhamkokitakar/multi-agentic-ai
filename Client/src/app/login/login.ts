@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth-service';
 import { Router } from '@angular/router';
@@ -15,11 +15,11 @@ import { Spinner } from '../shared/spinner/spinner';
 export class Login {
  mode: 'login' | 'signup' = 'login';
 
-  loading = false;
+  loading: boolean = false;
   errorMsg = '';
   successMsg = '';
 
-  constructor(private fb: FormBuilder, private authService:AuthService,  private router: Router) {}
+  constructor(private fb: FormBuilder, private authService:AuthService,  private router: Router, private cdr: ChangeDetectorRef) {}
 
   loginForm: any;
   signupForm: any;
@@ -57,6 +57,7 @@ export class Login {
 
     this.authService.login(payload).subscribe({
       next: (res) => {
+        
         this.loading = false;
         this.successMsg = 'Login successful! Redirecting to chat...';
         console.log('LOGIN SUCCESS:', res);
@@ -68,10 +69,12 @@ export class Login {
         localStorage.setItem('token', res.access_token);
       },
       error: (err) => {
-        this.loading = false;
-        this.errorMsg = err?.error?.message || 'Login failed';
-        this.successMsg = '';
-        console.error(err);
+        this.errorMsg = err?.error?.detail || 'Login failed';
+        this.successMsg = '';          
+          this.loading = false;
+        this.cdr.detectChanges();
+        console.log(this.loading,'loading');
+        
       }
     });
   }
@@ -82,7 +85,6 @@ export class Login {
     if (this.signupForm.invalid) return;
 
     const { email, password } = this.signupForm.value;
-
     this.loading = true;
     this.errorMsg = '';
     this.successMsg = '';
@@ -108,6 +110,8 @@ export class Login {
         console.log(err.error.detail,'error');
         this.loading = false;
         this.errorMsg = err?.error?.detail || 'Signup failed';
+        console.log(this.loading,'loading');
+        
       }
     });
   }
