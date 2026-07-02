@@ -4,7 +4,7 @@
 
 .chat-container {
 
-  height: 100vh;
+  height: 97vh;
 
   display: flex;
   flex-direction: column;
@@ -27,6 +27,22 @@
   border-bottom: 1px solid #333;
 
   background: #171717;
+}
+
+.request-info {
+  padding: 10px 18px;
+  color: #cfd8dc;
+  font-size: 0.95rem;
+  background: #121212;
+  border-bottom: 1px solid #333;
+}
+
+.request-warning {
+  padding: 12px 18px;
+  color: #ffccbc;
+  background: #3b2a20;
+  border-bottom: 1px solid #552a1a;
+  font-size: 0.95rem;
 }
 
 .messages {
@@ -234,4 +250,38 @@ button {
 
   text-align: center;
   pointer-events: none;
+}
+.messages {
+  overflow-y: auto;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #555 #202123; /* thumb track */
+}
+
+/* Chrome / Edge / Safari */
+.messages::-webkit-scrollbar {
+  width: 10px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: #202123;
+  border-radius: 10px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+  border: 2px solid #202123;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background: #6b6c70;
+}
+
+.session-limit-bar{
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 10px;
+    background: transparent;
 }

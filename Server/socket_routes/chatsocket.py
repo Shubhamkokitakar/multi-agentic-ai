@@ -3,9 +3,13 @@ from starlette.websockets import WebSocketDisconnect
 
 from graph.cricket_graph import graph
 from authentication.jwt_validation import verify_token
-
+from utils.request_counter import request_counts
 router = APIRouter()
 
+ROLE_LIMITS = {
+    "user": 5,
+    "admin": 100,
+}
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -14,18 +18,34 @@ async def websocket_endpoint(websocket: WebSocket):
 
     token = websocket.query_params.get("token")
 
-    email = verify_token(token)
+    user = verify_token(token)
 
-    if not email:
+    
+
+    if not user:
         await websocket.close(code=1008)
         return
 
 
+    email = user["email"]
+    role = user["role"]
     conversation_history = []
+    request_limit = ROLE_LIMITS.get(role, 3)
 
+    if email not in request_counts:
+        request_counts[email] = 0
     try:
         while True:
+            if request_counts[email] >= request_limit:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": f"Maximum {request_limit} questions per session reached. Please reconnect to start a new session."
+                })
+                await websocket.close(code=1008)
+                break
+
             question = await websocket.receive_text()
+            request_counts[email] += 1
 
             await websocket.send_json({
              "type": "stage",

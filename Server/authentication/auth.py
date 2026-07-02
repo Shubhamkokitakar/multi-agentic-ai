@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from database.db import get_db
 from authentication.schemas import SignupRequest, LoginRequest, TokenResponse
+from utils.request_counter import request_counts
 
 load_dotenv()
 
@@ -40,6 +41,7 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     print("Login attempt for email:", payload)
     user = db.query(User).filter(User.email == payload.email.lower()).first()
+    request_counts[user.email] = 0
 
     if not user:
         raise HTTPException(
@@ -59,7 +61,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     token = jwt.encode(
         {
             "sub": user.email,
-            "exp": expire
+            "exp": expire,
+            "role":"user"
         },
         SECRET_KEY,
         algorithm=ALGORITHM

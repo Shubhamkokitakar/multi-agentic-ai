@@ -2,6 +2,7 @@ import { Component, NgZone, ChangeDetectorRef } from '@angular/core';
 import { SocketService } from '../../services/socket.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-chat',
@@ -16,19 +17,30 @@ export class Chat {
   loading = false;
   stageText = '';
   stageVisible = false;
+  isLimitReached: boolean = false;
+  errorMessage = '';
 
   constructor(
     private socketService: SocketService,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
-
     this.socketService.connect();
 
     this.socketService.messages$.subscribe((data) => {
       console.log('data', data);
+
+      if (data?.type === 'error') {
+  this.errorMessage = data.message || 'Request limit reached.';
+  this.isLimitReached = true;
+  this.loading = false;
+  this.stageVisible = false;
+  this.cdr.detectChanges();
+  return;
+}
       this.ngZone.run(() => {
         const parseFollowUps = (followUps: any) => {
           if (Array.isArray(followUps)) {
@@ -126,6 +138,11 @@ export class Chat {
         this.cdr.detectChanges();
       });
     });
+  }
+
+  goToLogin(): void {
+  localStorage.removeItem('token'); // optional, if you store JWT in localStorage
+  this.router.navigate(['/login']);
   }
 
   sendMessage(): void {
