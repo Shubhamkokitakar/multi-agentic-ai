@@ -1,12 +1,15 @@
 import os
 import requests
 
-from typing import List, Dict, Any
+from typing import Dict, Any
 from dotenv import load_dotenv
+
 from langchain_core.callbacks.manager import adispatch_custom_event
 from langchain_openai import ChatOpenAI
 
+
 load_dotenv()
+
 
 llm = ChatOpenAI(
     model="gpt-4.1-mini",
@@ -18,92 +21,69 @@ class LiveCricketAgent:
 
     def __init__(self):
 
-        self.api_key = os.getenv("CRICAPI_KEY")
+        self.api_key = os.getenv("BBS_API_KEY")
 
         if not self.api_key:
-            raise Exception("CRICAPI_KEY not found in .env")
+            raise Exception(
+                "BBS_API_KEY not found in .env"
+            )
 
-        self.base_url = "https://api.cricapi.com/v1"
+        self.base_url = "https://api.bigballsdata.com/v1"
 
-    # ---------------------------------
-    # FETCH LIVE MATCHES
-    # ---------------------------------
-    def fetch_live_matches(self):
-
-        url = f"{self.base_url}/currentMatches"
-
-        params = {
-            "apikey": self.api_key,
-            "offset": 0
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}"
         }
+
+    # ---------------------------------
+    # FETCH MATCHES
+    # ---------------------------------
+    def fetch_matches(self):
+
+        url = f"{self.base_url}/cricket/matches"
 
         response = requests.get(
             url,
-            params=params,
+            headers=self.headers,
             timeout=15
         )
 
+        print(
+            f"BIG BALLS API STATUS: {response.status_code}"
+        )
+
         if response.status_code != 200:
+
             raise Exception(
-                f"API Error: {response.status_code} - {response.text}"
+                f"API Error: "
+                f"{response.status_code} - "
+                f"{response.text}"
             )
 
-        return response.json()
+        data = response.json()
+
+        print("BIG BALLS API RESPONSE:")
+        print(data)
+
+        return data
 
     # ---------------------------------
-    # EXTRACT MATCHES
+    # CONVERT API RESPONSE TO TEXT
     # ---------------------------------
-    def extract_matches(
+    def format_api_response(
         self,
         data: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-
-        return data.get("data", [])
-
-    # ---------------------------------
-    # FORMAT MATCH
-    # ---------------------------------
-    def format_match(
-        self,
-        match: Dict[str, Any]
     ) -> str:
 
-        return f"""
-Match: {match.get('name')}
-
-Status:
-{match.get('status')}
-
-Venue:
-{match.get('venue')}
-
-Match Type:
-{match.get('matchType')}
-
-Score:
-{match.get('score')}
-"""
+        return str(data)
 
     # ---------------------------------
     # MAIN EXECUTION
     # ---------------------------------
     def run(self):
 
-        data = self.fetch_live_matches()
+        data = self.fetch_matches()
 
-        matches = self.extract_matches(data)
-
-        if not matches:
-            return "No live matches found."
-
-        output = []
-
-        for match in matches[:5]:
-            output.append(
-                self.format_match(match)
-            )
-
-        return "\n\n------------------\n\n".join(output)
+        return self.format_api_response(data)
 
 
 # =====================================
@@ -111,47 +91,67 @@ Score:
 # =====================================
 
 async def live_agent(
-    question: str,
-    conversation_history: str = ""
+    question: str
 ):
+
+    print(
+        f"LIVE_AGENT: question={question}"
+    )
 
     agent = LiveCricketAgent()
 
+    # Get whatever Big Balls returns
     live_data = agent.run()
+
+    print(
+        "LIVE_AGENT: API data received"
+    )
 
     prompt = f"""
 You are a cricket assistant.
 
+Answer the user's question using ONLY
+the cricket data returned by the API.
+
 User Question:
 {question}
 
-Live Match Data:
+API Cricket Data:
 {live_data}
 
-Return the answer in the following format:
+Instructions:
 
-🏏 Match Name
+1. Use only the information available in the API data.
 
-- Status:
-- Score:
-- Venue:
+2. Do not invent scores, players, teams, venues, or match information.
 
-------------------
+3. If live matches are available, show the live matches relevant to the user's question.
 
-🏏 Match Name
+4. If no live matches are available in the API data, show the upcoming scheduled matches from the API instead.
 
-- Status:
-- Score:
-- Venue:
+5. Clearly indicate that these are upcoming matches and not currently live.
 
-Keep the response concise and highly readable.
+6. If multiple upcoming matches are available, show the most relevant ones.
+
+7. Keep the answer concise and readable.
+
+8. Do not mention API implementation details in the final answer.
+
+Answer the user's question directly.
 """
 
     full_response = []
 
     async for chunk in llm.astream(prompt):
-        token = getattr(chunk, "content", None)
 
+        token = getattr(
+            chunk,
+            "content",
+            None
+        )
+        print(
+            f"LIVE_AGENT: token={token}"
+        )
         if not token:
             continue
 
@@ -159,7 +159,12 @@ Keep the response concise and highly readable.
 
         await adispatch_custom_event(
             "token",
-            {"type": "token", "value": token}
+            {
+                "type": "token",
+                "value": token
+            }
         )
 
-    return "".join(full_response).strip()
+    return "".join(
+        full_response
+    ).strip()

@@ -1,65 +1,122 @@
+from nodes.chunking import Chunker
+from nodes.embeddings import Embedder
+
 from datasets import load_dataset
+from langchain_core.documents import Document
+from database.vector_store import VectorStore
 
-from nodes.embedding_node import Embedder
 
-from database.vector_store import collection
+# --------------------------------------------------
+# 1. LOAD DATASET
+# --------------------------------------------------
 
+dataset = load_dataset(
+    "catyung/cricket-qa-dataset",
+    split="train"
+)
+
+print("Columns:", dataset.column_names)
+print("First row:", dataset[0])
+
+
+# --------------------------------------------------
+# 2. CREATE DOCUMENTS
+# --------------------------------------------------
+
+documents = []
+
+for row in dataset:
+
+    text = f"""
+Question:
+{row['Question']}
+
+Answer:
+{row['Answer']}
+"""
+
+    documents.append(
+        Document(
+            page_content=text,
+            metadata={
+                "source": "cricket-qa-dataset"
+            }
+        )
+    )
+
+print("\nDocuments created:", len(documents))
+
+
+# --------------------------------------------------
+# 3. CHUNKING
+# --------------------------------------------------
+
+chunker = Chunker()
+
+chunks = chunker.split_documents(documents)
+
+print("\nTotal chunks:", len(chunks))
+
+
+# --------------------------------------------------
+# 4. PRINT CHUNKS
+# --------------------------------------------------
+
+print("\n========== CHUNKS ==========")
+
+for i, chunk in enumerate(chunks[:10]):
+
+    print(f"\n--- Chunk {i} ---")
+    print(chunk.page_content)
+
+    print("Metadata:")
+    print(chunk.metadata)
+
+
+# --------------------------------------------------
+# 5. CREATE EMBEDDINGS
+# --------------------------------------------------
 
 embedder = Embedder()
 
-# -------------------------
-# LOAD DATASET
-# -------------------------
-dataset = load_dataset(
+embeddings = embedder.embed_documents(chunks)
 
-    "catyung/cricket-qa-dataset",
 
-    split="train"
-)
-print(dataset.column_names)
+# --------------------------------------------------
+# 6. PRINT EMBEDDINGS
+# --------------------------------------------------
 
-print(dataset[0])
+print("\n========== EMBEDDINGS ==========")
 
-# -------------------------
-# CREATE DOCUMENTS
-# -------------------------
-documents = []
+for i, embedding in enumerate(embeddings[:10]):
 
-ids = []
+    print(f"\n--- Embedding {i} ---")
 
-for idx, row in enumerate(dataset):
+    print("Dimensions:", len(embedding))
 
-    text = f"""
+    # Print only first 10 values
+    print("First 10 values:", embedding[:10])
 
-    Question:
-    {row['Question']}
 
-    Answer:
-    {row['Answer']}
+# --------------------------------------------------
+# 7. STORE IN CHROMA
+# --------------------------------------------------
 
-    """
+vector_store = VectorStore()
 
-    documents.append(text)
 
-    ids.append(str(idx))
+ids = [
+    str(i)
+    for i in range(len(chunks))
+]
 
-# -------------------------
-# CREATE EMBEDDINGS
-# -------------------------
-embeddings = embedder.embed_batch(
-    documents
-)
-
-# -------------------------
-# STORE IN CHROMA
-# -------------------------
-collection.add(
-
-    documents=documents,
-
+vector_store.add_documents(
+    documents=[
+        chunk.page_content
+        for chunk in chunks
+    ],
     embeddings=embeddings,
-
     ids=ids
 )
 
-print("INGESTION COMPLETE")
+print("\nINGESTION COMPLETE")

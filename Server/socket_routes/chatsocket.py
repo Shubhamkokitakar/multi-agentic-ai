@@ -56,11 +56,7 @@ async def websocket_endpoint(websocket: WebSocket):
             final_answer = ""
             final_followups = []
 
-            # -------------------------
-            # STREAM EVENTS FROM GRAPH
-            # astream_events replaces astream + manual callbacks.
-            # version="v2" is required for LangGraph >= 0.2.
-            # -------------------------
+
             async for event in graph.astream_events(
                 {
                     "question": question,
