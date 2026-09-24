@@ -38,8 +38,17 @@
       <span class="stage-text">{{ stageText }}</span>
       <span class="stage-spinner"></span>
     </div>
+  </div>
+  <div>        
+     <!-- LIMIT / ERROR BAR -->
+  <div class="session-limit-bar" *ngIf="isLimitReached">
+    <div class="session-limit-message">
+      {{ errorMessage || 'You have reached the request limit for this session.' }}
+    </div>
 
-
+    <button class="login-redirect-btn" (click)="goToLogin()">
+      Back to Login
+    </button>
   </div>
 
   <div class="input-container">
@@ -49,9 +58,10 @@
       [(ngModel)]="question"
       (keyup.enter)="sendMessage()"
       placeholder="Ask anything..."
+      [disabled]="isLimitReached"
     />
 
-    <button (click)="sendMessage()">
+    <button (click)="sendMessage()" [disabled]="isLimitReached">
       Send
     </button>
 

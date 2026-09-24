@@ -4,7 +4,7 @@ from graph.state import GraphState
 
 
 async def live_node(state: GraphState):
-
+    print("LIVE_NODE: fetching live match data for question")
     # -------------------------
     # STAGE 1: FETCHING
     # -------------------------
@@ -21,9 +21,9 @@ async def live_node(state: GraphState):
         {"type": "stage", "stage": "generation", "message": "Generating answer..."}
     )
 
+    print(f"LIVE_NODE: calling live_agent with question={state['question']}")
     result = await live_agent(
         state["question"],
-        conversation_history=state.get("history", "")
     )
 
     state["response"] = result

@@ -12,11 +12,12 @@ def verify_token(token: str):
         )
 
         email = payload.get("sub")
+        role = payload.get("role")
 
         if not email:
             return None
 
-        return email
+        return {"email": email, "role": role}
 
     except JWTError:
         return None

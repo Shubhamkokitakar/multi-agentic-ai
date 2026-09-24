@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from database.db import get_db
 from authentication.schemas import SignupRequest, LoginRequest, TokenResponse
+from utils.request_counter import request_counts
 
 load_dotenv()
 
@@ -27,16 +28,26 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already exists")
     hashed = pwd_context.hash(payload.password)
     user = User(email=payload.email.lower(), hashed_password=hashed)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return {"id": user.id, "email": user.email}
-
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return {"id": user.id, "email": user.email}
+    except Exception:
+        db.rollback()
+        raise
 
 @router.post("/api/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     print("Login attempt for email:", payload)
     user = db.query(User).filter(User.email == payload.email.lower()).first()
+    request_counts[user.email] = 0
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
     print("User found:", user)
 
     if not user or not pwd_context.verify(payload.password, user.hashed_password):
@@ -50,7 +61,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     token = jwt.encode(
         {
             "sub": user.email,
-            "exp": expire
+            "exp": expire,
+            "role":"user"
         },
         SECRET_KEY,
         algorithm=ALGORITHM

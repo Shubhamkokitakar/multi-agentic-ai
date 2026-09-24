@@ -7,8 +7,6 @@ llm = ChatOpenAI(model="gpt-4.1-mini")
 async def rag_agent(question: str, documents: list[str]) -> str:
     """
     RAG generation with streaming tokens via custom events.
-    Token callbacks are gone — tokens are dispatched as events
-    and picked up by whoever is listening (e.g. the WebSocket layer).
     """
     context = "\n\n".join(
         f"[DOC {i+1}]\n{doc}" for i, doc in enumerate(documents or [])

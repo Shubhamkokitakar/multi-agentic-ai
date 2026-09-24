@@ -1,45 +1,34 @@
 import chromadb
-from nodes.embedding_node import Embedder
-
-client = chromadb.PersistentClient(path="./vector_db")
-
-collection = client.get_or_create_collection(
-    name="cricket_data"
-)
-print(collection,'collection')
-
-embedder = Embedder()
 
 
-def insert_documents(documents):
+class VectorStore:
 
-    embeddings = embedder.embed_batch(documents)
+    def __init__(self, collection_name="cricket_data"):
 
-    ids = [
+        self.client = chromadb.PersistentClient(
+            path="./vector_db"
+        )
 
-        f"id_{i}"
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name
+        )
 
-        for i in range(len(documents))
-    ]
+    def add_documents(self, documents, embeddings, ids):
 
-    collection.add(
+        self.collection.add(
+            documents=documents,
+            embeddings=embeddings,
+            ids=ids
+        )
 
-        documents=documents,
-        embeddings=embeddings,
-        ids=ids
-    )
-    print(collection, 'collection of documents after embedding')
+    def search_documents(self, query_embedding, n_results=3):
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=n_results
+        )
 
+        return results
 
-def search_documents(query):
+    def count(self):
 
-    query_embedding = embedder.embed_batch([query])[0]
-
-    results = collection.query(
-
-        query_embeddings=[query_embedding],
-        n_results=3
-    )
-    print(results,'resullts of embedding')
-
-    return results["documents"][0]
+        return self.collection.count()

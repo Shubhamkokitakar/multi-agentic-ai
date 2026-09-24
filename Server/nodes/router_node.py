@@ -2,31 +2,39 @@ import re
 from langchain_core.callbacks.manager import adispatch_custom_event
 from graph.state import GraphState
 
-LIVE_KEYWORDS = [
-    "live",
-    "score",
-    "today",
-    "current",
-    "latest",
-    "ipl"
+
+# ----------------------------
+# LIVE INTENT PATTERNS
+# ----------------------------
+LIVE_PATTERNS = [
+    r"\blive\s+(cricket\s+)?match(es)?\b",
+    r"\bcurrent\s+(cricket\s+)?match(es)?\b",
+    r"\blive\s+score(s)?\b",
+    r"\bcurrent\s+score(s)?\b",
+    r"\blatest\s+score(s)?\b",
+    r"\blatest\s+(cricket\s+)?match(es)?\b",
+    r"\btoday'?s\s+(cricket\s+)?match(es)?\b",
+    r"\btoday\s+(cricket\s+)?match(es)?\b",
+    r"\bmatch(es)?\s+today\b",
+    r"\bmatch(es)?\s+currently\s+playing\b",
+    r"\bcurrently\s+playing\b",
+    r"\bbeing\s+played\s+now\b",
 ]
 
-GENERIC_PATTERNS = [
-    r"hi",
-    r"hello",
-    r"hey",
-    r"thanks",
-    r"thank you",
-    r"good morning",
-    r"good evening",
-    r"how are you"
-]
+
+# ----------------------------
+# GENERIC / GREETING PATTERNS
+# ----------------------------
+GREETING_REGEX = (
+    r"^(hi|hello|hey|thanks|thank you|good morning|"
+    r"good evening|how are you)(\s+\w+){0,3}$"
+)
 
 
 def is_generic_message(question: str) -> bool:
     """
-    Returns True only when the user's message is primarily
-    a greeting/social interaction and not an actual question.
+    Returns True when the user's message is primarily
+    a greeting or simple social interaction.
     """
 
     question = question.lower().strip()
@@ -34,20 +42,7 @@ def is_generic_message(question: str) -> bool:
     # Remove punctuation
     normalized = re.sub(r"[^\w\s]", "", question)
 
-    # Exact greeting match
-    if normalized in GENERIC_PATTERNS:
-        return True
-
-    # Allow simple variants such as:
-    # "hi there"
-    # "hello bot"
-    # "hey buddy"
-    greeting_regex = (
-        r"^(hi|hello|hey|thanks|thank you|good morning|"
-        r"good evening|how are you)(\s+\w+){0,3}$"
-    )
-
-    return bool(re.match(greeting_regex, normalized))
+    return bool(re.match(GREETING_REGEX, normalized))
 
 
 # ----------------------------
@@ -77,26 +72,25 @@ async def router_node(state: GraphState):
     if is_generic_message(question):
 
         state["route"] = "generic"
-        return state
+        state["stage"] = "greeting_detected"
 
+        return state
 
     # ----------------------------
     # LIVE ROUTE
     # ----------------------------
     if any(
-        re.search(rf"\b{re.escape(k)}\b", question)
-        for k in LIVE_KEYWORDS
+        re.search(pattern, question)
+        for pattern in LIVE_PATTERNS
     ):
 
         state["route"] = "live"
-        return state
 
+        return state
 
     # ----------------------------
     # RAG ROUTE
     # ----------------------------
-    else:
-
-        state["route"] = "rag"
+    state["route"] = "rag"
 
     return state

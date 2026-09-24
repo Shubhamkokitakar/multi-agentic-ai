@@ -1,6 +1,11 @@
 from langchain_core.callbacks.manager import adispatch_custom_event
 from agents.rag_agent import rag_agent
-from database.vector_store import search_documents
+from database.vector_store import VectorStore
+from nodes.embeddings import Embedder
+
+vector_store = VectorStore()
+embedder = Embedder()
+
 
 
 async def rag_node(state):
@@ -14,8 +19,17 @@ async def rag_node(state):
         {"type": "stage", "stage": "retrieval", "message": "Searching knowledge base..."},
     )
 
-    documents = search_documents(search_q)
+    query_embedding = embedder.embed_query(search_q)
+
+
+    results  = vector_store.search_documents(query_embedding, n_results=3)
+
+    documents = results["documents"][0]
+    print(f"documents retrieved: {documents}")
+
     state["retrieved_docs"] = documents
+
+
 
     # -------------------------
     # STAGE 2: GENERATION
